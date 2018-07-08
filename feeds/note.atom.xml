@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>naetw's blog - note</title><link href="https://naetw.github.io/" rel="alternate"></link><link href="https://naetw.github.io/feeds/note.atom.xml" rel="self"></link><id>https://naetw.github.io/</id><updated>2017-01-04T09:09:00+08:00</updated><entry><title>Use snipmate in vim to make life easier</title><link href="https://naetw.github.io/posts/2017/01/04/use-snipmate-in-vim-to-make-life-easier/" rel="alternate"></link><published>2017-01-04T09:09:00+08:00</published><updated>2017-01-04T09:09:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2017-01-04:/posts/2017/01/04/use-snipmate-in-vim-to-make-life-easier/</id><summary type="html">&lt;p&gt;A note of using snipmate in vim&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Description&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;在打 CTF 的時候，每次解 pwn 都要重複打一些基本設定覺得很麻煩很懶，後來發現了 &lt;a href="https://github.com/garbas/vim-snipmate"&gt;snipmate&lt;/a&gt; + &lt;a href="https://github.com/honza/vim-snippets"&gt;vim-snippets&lt;/a&gt; 覺得滿好用的，很適合我這種懶人&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;Install&lt;/h2&gt;
+&lt;p&gt;個人是用 &lt;a href="https://github.com/gmarik/vundle"&gt;Vundle&lt;/a&gt;，其他安裝方式可以到 GitHub 上去看&lt;/p&gt;
+&lt;p&gt;在 .vimrc 裡面的 &lt;code&gt;call vundle#begin()&lt;/code&gt; 跟 &lt;code&gt;call vundle#end()&lt;/code&gt; 之間加入以下幾行：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Plugin &amp;#39;MarcWeber/vim-addon-mw-utils&amp;#39;
+Plugin &amp;#39;tomtom/tlib_vim&amp;#39;
+Plugin &amp;#39;garbas/vim-snipmate&amp;#39;
+Plugin &amp;#39;honza/vim-snippets&amp;#39;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;snipmate depends on &lt;a href="https://github.com/marcweber/vim-addon-mw-utils"&gt;vim-addon-mw-utils&lt;/a&gt; and &lt;a href="https://github.com/tomtom/tlib_vim"&gt;tlib_vim&lt;/a&gt;，所以這兩個也要一併裝起來&lt;/p&gt;
+&lt;p&gt;而裝了 snipmate 後還沒有任何 snippets 可以用，所以也會裝 vim-snippets，這是 snipmate default snippets，這樣一來就可以支援各種語言&lt;/p&gt;
+&lt;h2&gt;Usage&lt;/h2&gt;
+&lt;p&gt;平常打 CTF 解 pwn 題基本上都需要:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ch"&gt;#!/usr/bin/env python&lt;/span&gt;
+
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;pwn&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;
+
+&lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;127.0.0.1&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;4000&lt;/span&gt;
+
+&lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;remote&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;每次都要打一遍雖然很快但很麻煩@@，有了 snippets 可以很快的完成&lt;/p&gt;
+&lt;p&gt;只要在 &lt;code&gt;~/.vim/&lt;/code&gt; 底下建一個 snippets directory，在裡面可以放不同語言的 snippets，以我的例子是建一個 &lt;code&gt;python.snippets&lt;/code&gt;，在裡面加入以下幾行：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;snippets&lt;/span&gt; &lt;span class="n"&gt;pwn&lt;/span&gt;
+    &lt;span class="c1"&gt;#!/usr/bin/env python&lt;/span&gt;
+
+    &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;pwn&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;
+
+    &lt;span class="n"&gt;ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;127.0.0.1&amp;#39;&lt;/span&gt;
+    &lt;span class="n"&gt;port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;4000&lt;/span&gt;
+
+    &lt;span class="n"&gt;r&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;remote&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ip&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;這樣一來我只要輸入 pwn 之後按下 tab 就可以生出 snippets 裡面所記錄的 code&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align="center"&gt;Demo&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align="center"&gt;&lt;img alt="Demo" src="http://i.imgur.com/jyNKSc6.gif"&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;</content><category term="vim"></category></entry></feed>

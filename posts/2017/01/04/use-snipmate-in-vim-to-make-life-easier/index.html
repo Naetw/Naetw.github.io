@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>  Stack Overflow
+    <title>  Use snipmate in vim to make life easier
  | naetw's blog</title>
 
     <meta name="author" content="Naetw"/>
@@ -29,6 +29,7 @@
 
     <!-- Feeds -->
       <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/note.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: note - Atom Feed"/>
 
 
   </head>
@@ -82,9 +83,9 @@
 
 
       <div class="row">
-        <div class=" col-md-12  ">
+        <div class=" col-md-9  ">
   <h1>
-    <a  href="https://naetw.github.io/tag/stack-overflow/" rel="bookmark" title="Permalink to Stack Overflow articles">Stack Overflow articles</a>
+    <a href="https://naetw.github.io/posts/2017/01/04/use-snipmate-in-vim-to-make-life-easier/" rel="bookmark" title="Permalink to Use snipmate in vim to make life easier">Use snipmate in vim to make life easier</a>
   </h1>
         </div>
       </div>
@@ -92,15 +93,99 @@
       <div class="row">
 
 
-        <div class=" col-md-12 " id="content" role="main">
-  <dl class="dl-horizontal">
-      <dt><abbr class="published" title="2017-02-11T23:33:00+08:00">Sat 11 February 2017</abbr></dt>
-      <dd><a href="https://naetw.github.io/posts/2017/02/11/codegate-ctf-2017-babypwn-50/">[CODEGATE CTF 2017] babypwn 50</a></dd>
-      <dt><abbr class="published" title="2016-12-12T08:24:00+08:00">Mon 12 December 2016</abbr></dt>
-      <dd><a href="https://naetw.github.io/posts/2016/12/12/seccon-ctf-2016-quals-cheer_msg-100/">[SECCON CTF 2016 Quals] Cheer_msg 100</a></dd>
-  </dl>
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <h2>Description</h2>
+<blockquote>
+<p>在打 CTF 的時候，每次解 pwn 都要重複打一些基本設定覺得很麻煩很懶，後來發現了 <a href="https://github.com/garbas/vim-snipmate">snipmate</a> + <a href="https://github.com/honza/vim-snippets">vim-snippets</a> 覺得滿好用的，很適合我這種懶人</p>
+</blockquote>
+<h2>Install</h2>
+<p>個人是用 <a href="https://github.com/gmarik/vundle">Vundle</a>，其他安裝方式可以到 GitHub 上去看</p>
+<p>在 .vimrc 裡面的 <code>call vundle#begin()</code> 跟 <code>call vundle#end()</code> 之間加入以下幾行：</p>
+<div class="highlight"><pre><span></span>Plugin &#39;MarcWeber/vim-addon-mw-utils&#39;
+Plugin &#39;tomtom/tlib_vim&#39;
+Plugin &#39;garbas/vim-snipmate&#39;
+Plugin &#39;honza/vim-snippets&#39;
+</pre></div>
+
+
+<p>snipmate depends on <a href="https://github.com/marcweber/vim-addon-mw-utils">vim-addon-mw-utils</a> and <a href="https://github.com/tomtom/tlib_vim">tlib_vim</a>，所以這兩個也要一併裝起來</p>
+<p>而裝了 snipmate 後還沒有任何 snippets 可以用，所以也會裝 vim-snippets，這是 snipmate default snippets，這樣一來就可以支援各種語言</p>
+<h2>Usage</h2>
+<p>平常打 CTF 解 pwn 題基本上都需要:</p>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">ip</span> <span class="o">=</span> <span class="s1">&#39;127.0.0.1&#39;</span>
+<span class="n">port</span> <span class="o">=</span> <span class="mi">4000</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+</pre></div>
+
+
+<p>每次都要打一遍雖然很快但很麻煩@@，有了 snippets 可以很快的完成</p>
+<p>只要在 <code>~/.vim/</code> 底下建一個 snippets directory，在裡面可以放不同語言的 snippets，以我的例子是建一個 <code>python.snippets</code>，在裡面加入以下幾行：</p>
+<div class="highlight"><pre><span></span><span class="n">snippets</span> <span class="n">pwn</span>
+    <span class="c1">#!/usr/bin/env python</span>
+
+    <span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+    <span class="n">ip</span> <span class="o">=</span> <span class="s1">&#39;127.0.0.1&#39;</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="mi">4000</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+</pre></div>
+
+
+<p>這樣一來我只要輸入 pwn 之後按下 tab 就可以生出 snippets 裡面所記錄的 code</p>
+<table>
+<thead>
+<tr>
+<th align="center">Demo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="Demo" src="http://i.imgur.com/jyNKSc6.gif"></td>
+</tr>
+</tbody>
+</table>
+  </div>
+
+
+
         </div>
 
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2017-01-04T09:09:00+08:00"><i class="fa fa-calendar"></i> Wed 04 January 2017</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="https://naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="https://naetw.github.io/category/note/" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="1 article in this category">note</a>
+            <a href="/tag/vim/" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">vim</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
 
       </div>
 
@@ -153,6 +238,7 @@
               <h5>Feeds</h5>
               <ul class="list-unstyled">
                   <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/note.atom.xml"><i class="fa fa-rss"></i> Category: note (Atom)</a></small></li>
               </ul>
           </div>
 

