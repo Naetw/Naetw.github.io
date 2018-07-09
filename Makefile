@@ -37,6 +37,13 @@ ifeq ($(RELATIVE), 1)
 	PELICANOPTS += --relative-urls
 endif
 
+# Helper function for newpost
+POSTSDIR := $(shell echo '$(INPUTDIR)/posts/$(CATEGORY)')
+DATE := $(shell date +'%Y-%m-%d %H:%M')
+SLUG := $(shell echo '${NAME}' | sed -e 's/\ /-/g' | tr -s '-' | tr A-Z a-z)
+EXT ?= md
+AUTHOR=Naetw
+
 help:
 	@echo 'Makefile for a pelican Web site                                           '
 	@echo '                                                                          '
@@ -120,5 +127,18 @@ cf_upload: publish
 github: publish
 	ghp-import -m "Generate Pelican site" -b $(GITHUB_PAGES_BRANCH) $(OUTPUTDIR)
 	git push origin $(GITHUB_PAGES_BRANCH)
+
+newpost:
+ifneq ($(and $(NAME), $(CATEGORY)),)
+	echo "Title: $(NAME)"     > $(POSTSDIR)/$(SLUG).$(EXT)
+	echo "Date: $(DATE)"     >> $(POSTSDIR)/$(SLUG).$(EXT)
+	echo "Tags: "            >> $(POSTSDIR)/$(SLUG).$(EXT)
+	echo "Author: $(AUTHOR)" >> $(POSTSDIR)/$(SLUG).$(EXT)
+	echo "Summary: "         >> $(POSTSDIR)/$(SLUG).$(EXT)
+	vim $(POSTSDIR)/$(SLUG).$(EXT)
+else
+	@echo 'Missing variable NAME or CATEGORY'
+	@echo 'Usage: make newpost NAME="Title of the article" CATEGORY="Folder of the article"'
+endif
 
 .PHONY: html help clean regenerate serve serve-global devserver stopserver publish ssh_upload rsync_upload dropbox_upload ftp_upload s3_upload cf_upload github
