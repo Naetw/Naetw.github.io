@@ -127,6 +127,7 @@ cf_upload: publish
 github: publish
 	ghp-import -m "Generate Pelican site" -b $(GITHUB_PAGES_BRANCH) $(OUTPUTDIR)
 	git push origin $(GITHUB_PAGES_BRANCH)
+	git push origin source
 
 newpost:
 ifneq ($(and $(NAME), $(CATEGORY)),)

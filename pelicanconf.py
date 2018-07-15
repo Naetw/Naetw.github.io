@@ -27,6 +27,7 @@ SOCIAL = (('GitHub', 'https://github.com/{}'.format(GITHUB_USERNAME)),)
 DEFAULT_PAGINATION = 10
 
 # URL
+SLUGIFY_SOURCE = 'basename'
 ARTICLE_URL = 'posts/{date:%Y}/{date:%m}/{date:%d}/{slug}/'
 ARTICLE_SAVE_AS = ARTICLE_URL + 'index.html'
 
