@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>  [Note] 你所不知道的 C 語言：開發工具和規格標準篇
+ | naetw's blog</title>
+
+    <meta name="author" content="Naetw"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/jquery.mglass.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/pygment-darkly.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/style.css"/>
+
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Istok+Web' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'/>
+
+
+    <link rel="icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+
+    <!-- Feeds -->
+      <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/note.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: note - Atom Feed"/>
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1><a href="https://naetw.github.io">naetw's blog</a> <small></small></h1>
+      </div>
+
+      <nav class="navbar navbar-default">
+
+        <!-- Hamburger menu for mobile -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#plumage-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://naetw.github.io" title="">naetw's blog</a>
+        </div>
+
+        <!-- Menus and search forms -->
+        <div class="collapse navbar-collapse" id="plumage-navbar-collapse-1">
+
+          <ul class="nav navbar-nav">
+<li >
+                <a href="/archives">Archives</a>
+              </li>
+<li >
+                <a href="/categories">Categories</a>
+              </li>
+<li >
+                <a href="/tags">Tags</a>
+              </li>
+          </ul>
+
+
+
+        </div>
+
+      </nav>
+
+    </div>
+
+
+    <div class="container main">
+
+
+      <div class="row">
+        <div class=" col-md-9  ">
+  <h1>
+    <a href="https://naetw.github.io/posts/2018/02/06/jserv-c-course-dev-tools-and-spec-note/" rel="bookmark" title="Permalink to [Note] 你所不知道的 C 語言：開發工具和規格標準篇">[Note] 你所不知道的 C 語言：開發工具和規格標準篇</a>
+  </h1>
+        </div>
+      </div>
+
+      <div class="row">
+
+
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <blockquote>
+<p>最近有空開始看 C 語言講座系列的直播，這篇主要記下 Jserv 在直播中提過但是沒有細講的內容。其餘內容請參閱下方共筆連結。</p>
+<p><a href="https://hackmd.io/s/HJFyt37Mx">原始課程共筆連結</a></p>
+</blockquote>
+<h2>Designated Initializer</h2>
+<p>在 C90 時，初始化的順序必須要照著宣告時的順序，在 C99 後可以任意指定 member 來初始化</p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">a</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">15</span> <span class="p">};</span>
+<span class="c1">// is equivalent to</span>
+<span class="kt">int</span> <span class="n">a</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">29</span><span class="p">,</span> <span class="mi">0</span> <span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">point</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// ====================================</span>
+
+<span class="k">struct</span> <span class="n">point</span> <span class="n">p</span> <span class="o">=</span> <span class="p">{</span> <span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">yvalue</span><span class="p">,</span> <span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">xvalue</span> <span class="p">};</span>
+<span class="c1">// is equivalent to</span>
+<span class="k">struct</span> <span class="n">point</span> <span class="n">p</span> <span class="o">=</span> <span class="p">{</span> <span class="n">xvalue</span><span class="p">,</span> <span class="n">yvalue</span> <span class="p">};</span>
+
+<span class="c1">// ====================================</span>
+
+<span class="cm">/*</span>
+<span class="cm"> * 沒有特別寫 designator 的初始值會給下一個接續的元素直接使用</span>
+<span class="cm"> */</span>
+<span class="kt">int</span> <span class="n">a</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span> <span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">v4</span> <span class="p">};</span>
+<span class="c1">// is equivalent to</span>
+<span class="kt">int</span> <span class="n">a</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">0</span><span class="p">,</span> <span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">v4</span><span class="p">,</span> <span class="mi">0</span> <span class="p">};</span>
+</pre></div>
+
+
+<ul>
+<li>在 <code>struct</code> 的 initialization 中，Omitted field members are implicitly initialized the same as objects that have static storage duration. (也就是會被初始化成跟 static variable 相同的值）</li>
+<li><em>[index]</em>, <em>.fieldname</em> 被稱作 designator<ul>
+<li>這兩個 designator 也可以同時使用<ul>
+<li>E.g., <code>struct</code> array 的初始化<ul>
+<li><code>struct point ptarray[10] = { [2].y = yv2, [2].x = xv2, [0].x = xv0 };</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>union</code> 的初始化方式跟 <code>struct</code> 一樣</li>
+</ul>
+<blockquote>
+<p>註：在 GNU C++ 中並沒有上面這些規範，因此不能這樣使用。</p>
+</blockquote>
+<h2>Bootstrapping Compiler</h2>
+<p>意指一個透過自身語言來撰寫自身的 compiler。</p>
+<p>Initial core 會是由別的語言撰寫通常是組合語言，而這個 core 會是該語言的一個很小的子集，接著會開始擴展，類似 0 生 1，1 生 2 ... 最後就成為一個 self-compiling compiler。</p>
+<blockquote>
+<p>科普：bootstrapping 有「自助」、「不求人」之意，源自 19th-centry 某篇小說主角 "pull himself over a fence by his bootstraps"。</p>
+<p>延伸閱讀：<a href="http://blog.jobbole.com/94311/">第一個 C 语言编译器是怎样编写的？</a></p>
+</blockquote>
+<h2>Lvalues</h2>
+<p><em>lvalue</em> 原先真的是跟一個 assignment 的左側有關，但是後來較精準的定義是作為 "locator value" [1]，也就是說 <em>lvalue</em> 是一個物件的表示式 (an expression referring to an object)，這個物件的型態可以是一般的 object type or incomplete type，但是不可為 <code>void</code>。</p>
+<ul>
+<li>Object in C - 一種資料表示法<ul>
+<li>原文：region of data storage in the execution environment, the contents of which can represent values</li>
+<li>在執行期間資料儲存的區域，可以表示數值的內容</li>
+</ul>
+</li>
+</ul>
+<p>[1]: The name "lvalue" comes originally from the assignment expression E1 = E2, in which the left operand E1 is required to be a (modifiable) lvalue. It is perhaps better considered as representing an object "locator value". What is sometimes called "rvalue" is in this International Standard described as the "value of an expression". An obvious example of an lvalue is an identifier of an object. As a further example, if E is a unary expression that is a pointer to an object, *E is an lvalue that designates the object to which E points. (C99 6.3.2.1 footnote)</p>
+<p>一個簡單的例子：</p>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="kt">int</span> <span class="o">*</span><span class="n">E</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">;</span>
+<span class="o">++</span><span class="p">(</span><span class="o">*</span><span class="n">E</span><span class="p">);</span>  <span class="c1">// a = a + 1</span>
+<span class="o">++</span><span class="p">(</span><span class="n">a</span><span class="o">++</span><span class="p">);</span> <span class="c1">// error</span>
+</pre></div>
+
+
+<ul>
+<li>E 就是上面 [1] 所提及的 a pointer to an object (這裡的 object 指的就是 a 的 address)，下面列舉 E 這個 identifier 不同角度所代表的身份：<ul>
+<li><code>E</code><ul>
+<li>object: 儲存 address of int object 的區域</li>
+<li>lvalue: E object 的位置，也就是 E object 這塊區域的 address</li>
+</ul>
+</li>
+<li><code>*E</code><ul>
+<li>lvalue: 對 E 這個 object 做 dereference 也就是把 E object 所代表的內容 (address of int object) 做 dereference，也就得到了 int object 的位置，換個說法就是上面 [1] 所提到的 lvalue that designates the object which E points。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>在 gcc 7.2.1 中會產生 error: lvalue required as increment operand，因為 a++ 會 return a 的 value，而這個 value 是暫存值也就是一個 non-lvalue，而 ++() 這個 operator 的 operand 必須要是一個 lvalue，因為要寫回 data，需要有地方 (location) 可以寫。</li>
+</ul>
+<blockquote>
+<p>注意：在 C 中只有分為 lvalue 跟 non-lvalue，rvalue 是在 C++ 中才被定義。</p>
+</blockquote>
+<h2>6.5.3.2 Address and indirection operators</h2>
+<ul>
+<li><code>&amp;</code> 所能操作的 operand 只能是：<ul>
+<li>function designator - 基本上就是 function name</li>
+<li><code>[]</code> or <code>*</code> 的操作結果<ul>
+<li>跟這兩個作用時，基本上就是相消<ul>
+<li><code>*</code> - operand 本身</li>
+<li><code>[]</code> - <code>&amp;</code> 會消失，而 <code>[]</code> 會被轉換成只剩 <code>+</code> (註：原本 <code>[]</code> 會是 <code>+</code> 搭配 <code>*</code>)<ul>
+<li>E.g., <code>&amp;(a[5]) == a + 5</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>一個指向非 bit-field or register storage-class specifier 的 object 的 lvalue<ul>
+<li>bit-field：一種在 <code>struct</code> 或 <code>union</code> 中使用用來節省記憶體空間的 object<ul>
+<li>特別的用途：沒有名稱的 bit-field 可以做為 padding</li>
+<li><a href="https://www.geeksforgeeks.org/bit-fields-c/">Geeksforgeeks 上對 bit-field 的介紹</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>除了遇到 <code>[]</code> 或 <code>*</code> 外，使用 <code>&amp;</code> 的結果基本上都是得到 pointer to the object 或是 function 的 address</li>
+<li><code>char str[123]</code>: why <code>str == &amp;str</code>?<ul>
+<li>實際上左右兩邊的型態是不一樣的，只是值相同。<ul>
+<li>左邊的是 pointer to char：<code>char *</code><ul>
+<li>規格書中表示：除非遇到 <code>sizeof</code> 或是 <code>&amp;</code> 之外，array of type (在這就是指 <code>str</code>) 都會被直接解讀成 pointer to type (在這就是 pointer to char)，而這個 type 是根據 array 的第一個元素來的 [1]</li>
+</ul>
+</li>
+<li>右邊的則是 pointer to an array： <code>char (*)[123]</code><ul>
+<li>上面提到：遇到 <code>&amp;</code> 時，<code>str</code> 不會被解讀為 pointer to type，而是做為原本的 object，在這就是 array object，而 address of array object 也就是這個 array object 的起始位址，當然也就會跟第一個元素的位址相同</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>除了用值相同來解釋外，規格書在提到 equality operators 時，也有說到類似情境 [2]</li>
+</ul>
+</li>
+</ul>
+<p>[1]: Except when it is the operand of the sizeof operator or the unary &amp; operator, or is a string literal used to initialize an array, an expression that has type ‘‘array of type’’ is converted to an expression with type ‘‘pointer to type’’ that points to the initial element of the array object and is not an lvalue. (C99 6.3.2.1)</p>
+<p>[2]: Two pointers compare equal if and only if both are null pointers, both are pointers to the same object (including a pointer to an object and a subobject at its beginning) or function (C99 6.5.9)</p>
+<h2>好用的工具</h2>
+<ul>
+<li>英文很重要：<code>cdecl</code>：<ul>
+<li>可以產生 C 語言的宣告，給英文回傳 C 語言，給 C 語言回傳英文。</li>
+</ul>
+</li>
+<li>GDB<ul>
+<li>神奇的工具 <a href="http://rr-project.org">rr</a> (Record and Replay Framework)</li>
+</ul>
+</li>
+</ul>
+<h2>Reference</h2>
+<ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/Designated-Inits.html">Designated Initializer</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Bootstrapping_(compilers)">Bootstrapping Compiler</a></li>
+<li><a href="http://www.cnblogs.com/dejavu/archive/2012/09/02/2667640.html">&lt;C/C++> 左值和右值, L-value和R-value</a></li>
+<li><a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf">C99 White Paper</a></li>
+</ul>
+  </div>
+
+
+
+        </div>
+
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2018-02-06T10:27:00+08:00"><i class="fa fa-calendar"></i> Tue 06 February 2018</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="https://naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="https://naetw.github.io/category/note/" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="2 articles in this category">note</a>
+            <a href="/tag/c/" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">C</a>
+            <a href="/tag/ni-suo-bu-zhi-dao-de-c-yu-yan/" data-toggle="tooltip"
+      class="label label-default"
+      title="1 article with this tag">你所不知道的 C 語言</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
+
+      </div>
+
+    </div>
+
+    <!-- TODO: make footer sticky -->
+    <footer class="container-fluid">
+      <div class="container">
+        <div class="row">
+
+            <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="https://github.com/Naetw">
+      <i class="fa fa-github"></i>
+    GitHub
+  </a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                </ul>
+            </div>
+
+          <div class="col-md-2">
+            <h5>Browse content by</h5>
+            <ul class="list-unstyled">
+                <li><a href="https://naetw.github.io/categories/index.html"><i class="fa fa-tags"></i> Categories</a></li>
+                <li><a href="https://naetw.github.io/archives/index.html"><i class="fa fa-calendar"></i> Dates</a></li>
+                <li><a href="https://naetw.github.io/tags/index.html"><i class="fa fa-tag"></i> Tags</a></li>
+            </ul>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Copyright notice</h5>
+            <p>© Copyright 2016-2018 Naetw.</p>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Disclaimer</h5>
+              <p>All opinions expressed in this site are my own personal opinions and are not endorsed by, nor do they represent the opinions of my previous, current and future employers or any of its affiliates, partners or customers.</p>
+          </div>
+
+          <div class="col-md-2">
+              <h5>Feeds</h5>
+              <ul class="list-unstyled">
+                  <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/note.atom.xml"><i class="fa fa-rss"></i> Category: note (Atom)</a></small></li>
+              </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <h5 class="text-right"><a href="#"><i class="fa fa-arrow-up"></i> Back to top</a></h5>
+
+      <div class="container">
+        <div class="row col-md-12 text-muted text-center">
+          Site generated by <a href="https://getpelican.com"> Pelican</a>.<br/>
+          <a href="https://github.com/kdeldycke/plumage"> Plumage</a> theme by <a href="https://kevin.deldycke.com">Kevin Deldycke</a>.
+        </div>
+      </div>
+
+    </footer>
+
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-122098105-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fitvids/1.1.0/jquery.fitvids.min.js"></script>
+    <script src="https://naetw.github.io/theme/js/jquery.mglass.js"></script>
+    <script src="https://naetw.github.io/theme/js/application.js"></script>
+
+  </body>
+</html>
