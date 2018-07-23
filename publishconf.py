@@ -21,4 +21,4 @@ DELETE_OUTPUT_DIRECTORY = True
 # Following items are often useful when publishing
 
 GOOGLE_ANALYTICS = "UA-122098105-1"
-#DISQUS_SITENAME = ""
+DISQUS_SITENAME = "naetw-github-io"
