@@ -1,5 +1,847 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>naetw's blog - note</title><link href="https://naetw.github.io/" rel="alternate"></link><link href="https://naetw.github.io/feeds/note.atom.xml" rel="self"></link><id>https://naetw.github.io/</id><updated>2018-02-06T10:27:00+08:00</updated><entry><title>[Note] 你所不知道的 C 語言：開發工具和規格標準篇</title><link href="https://naetw.github.io/posts/2018/02/06/jserv-c-course-dev-tools-and-spec-note/" rel="alternate"></link><published>2018-02-06T10:27:00+08:00</published><updated>2018-02-06T10:27:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2018-02-06:/posts/2018/02/06/jserv-c-course-dev-tools-and-spec-note/</id><summary type="html">&lt;p&gt;最近有空開始看 C 語言講座系列的直播，這篇主要記下 Jserv 在直播中提過但沒有細講的內容。&lt;/p&gt;</summary><content type="html">&lt;blockquote&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>naetw's blog</title><link href="https://naetw.github.io/" rel="alternate"></link><link href="https://naetw.github.io/feeds/note.atom.xml" rel="self"></link><id>https://naetw.github.io/</id><updated>2019-01-31T09:51:00+08:00</updated><entry><title>[note] Modern Microprocessors in 90-minute guide</title><link href="https://naetw.github.io/posts/2019/01/31/modern-microprocessors-in-90-minute-guide/" rel="alternate"></link><published>2019-01-31T09:51:00+08:00</published><updated>2019-01-31T09:51:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2019-01-31:posts/2019/01/31/modern-microprocessors-in-90-minute-guide/</id><summary type="html">&lt;blockquote&gt;
+&lt;p&gt;&lt;a href="http://www.lighterra.com/papers/modernmicroprocessors/"&gt;Modern Microprocessors in 90-minute guide&lt;/a&gt; 筆記&lt;/p&gt;
+&lt;p&gt;圖與表格皆來自原文&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h1&gt;More Than Just Megahertz&lt;/h1&gt;
+&lt;p&gt;首先要釐清的觀念是 — 時脈並不等同於處理器效能。&lt;/p&gt;
+&lt;p&gt;可以看下表的比較：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;SPECint95&lt;/th&gt;
+&lt;th&gt;SPECfp95&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;195 MHz&lt;/td&gt;
+&lt;td&gt;MIPS R10000&lt;/td&gt;
+&lt;td&gt;11.0&lt;/td&gt;
+&lt;td&gt;17.0&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;400 MHz&lt;/td&gt;
+&lt;td&gt;Alpha 21164&lt;/td&gt;
+&lt;td&gt;12.3&lt;/td&gt;
+&lt;td&gt;17.2&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;300 MHz&lt;/td&gt;
+&lt;td&gt;UltraSPARC&lt;/td&gt;
+&lt;td&gt;12.1&lt;/td&gt;
+&lt;td&gt;15.5&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;300 MHz&lt;/td&gt;
+&lt;td&gt;Pentium II&lt;/td&gt;
+&lt;td&gt;11.6&lt;/td&gt;
+&lt;td&gt;8.8&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;300 MHz&lt;/td&gt;
+&lt;td&gt;PowerPC G3&lt;/td&gt;
+&lt;td&gt;14.8&lt;/td&gt;
+&lt;td&gt;11.4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;135 MHz&lt;/td&gt;
+&lt;td&gt;POWER2&lt;/td&gt;
+&lt;td&gt;6.2&lt;/td&gt;
+&lt;td&gt;17.6&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;除了時脈外，一個時脈週期能夠執行的指令數（Instruction Per Cycle, IPC）也是決定效能的關鍵因素。&lt;/p&gt;
+&lt;p&gt;因此就有了 … Pipelining &amp;amp; Instruction-Level Parallelism&lt;/p&gt;
+&lt;h1&gt;Pipelining &amp;amp; Instruction-Level Parallelism&lt;/h1&gt;
+&lt;p&gt;指令是如何被執行的？&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;抓取指令&lt;/li&gt;
+&lt;li&gt;解碼&lt;/li&gt;
+&lt;li&gt;執行&lt;/li&gt;
+&lt;li&gt;將結果寫入&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;因此最簡單的處理器可以想像成每個指令 4 個時脈週期（CPI = 4），如下圖：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Figure 1 - The instruction flow of a sequential processor" src="http://www.lighterra.com/papers/modernmicroprocessors/sequential2.svg" /&gt;&lt;/p&gt;
+&lt;p&gt;現代處理器會將不同階段重疊成一條管線（pipeline），就像工廠的組裝線（組裝完第一部分交給第二部分時，第一部分的負責人可以進行第二項產品的第一部分組裝），在此設計下，處理器就變成每個指令 1 個時脈週期（CPI = 1，將指令數增加可以發現 CPI 越來越接近 1）如下圖：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Figure 2 - The instruction flow of a pipelined processor" src="http://www.lighterra.com/papers/modernmicroprocessors/pipelined2.svg" /&gt;&lt;/p&gt;
+&lt;p&gt;管線（pipeline）的各個階段會由 latch [1] 來切開，並負責傳遞各個階段的結果，而 latch 則是由 clock 來控制的。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Figure 3 – A pipelined microarchitecture" src="http://www.lighterra.com/papers/modernmicroprocessors/pipelinedmicroarch2.svg" /&gt;&lt;/p&gt;
+&lt;p&gt;由於指令執行完後的結果可能是下個指令要用到的，與其被塞著等結果寫入，不如加個旁通管（bypasses）。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Figure 4 – A pipelined microarchitecture with bypasses" src="http://www.lighterra.com/papers/modernmicroprocessors/pipelinedbypasses2.svg" /&gt;&lt;/p&gt;
+&lt;p&gt;上面的解說圖看似簡單，以執行階段來說，裡面應是由各種不同的邏輯電路所組成，像是分支（branch）、整數運算（int）等等。&lt;/p&gt;
+&lt;p&gt;早期的精簡指令集計算（Reduced Instruction Set Computing, RISC） 處理器較容易做到管線的設計（像是 IBM’s 801, MIPS R2000, original SPARC）。在同一時代，主流處理器（80386, 68030, VAX CISC）基本上都是循序執行的，也因此即便時脈較低，運作的速度仍會比時脈高的還要快。&lt;/p&gt;
+&lt;p&gt;[1]: 一種儲存資料的電路，詳情可見最下方補充。&lt;/p&gt;
+&lt;h1&gt;Deeper Pipelines - Superpipelining&lt;/h1&gt;
+&lt;p&gt;clock speed 取決於最長的階段（stage）[1]，將最長的拆細，變成多個較小的階段，如此一來處理器可以擁有更快的 clock speed。&lt;/p&gt;
+&lt;p&gt;理想上，stage 變多 → 一個指令所需的 clocks 數變高，但是 clock speed 提升了，每秒可以擁有更多的 clocks，而 CPI 仍然是 1 → 整體效能提升。&lt;/p&gt;
+&lt;p&gt;[1]: 可參考補充的 sequential circuits 中的 synchronous 介紹，裡面提到 clock 的間隔必須足夠長讓邏輯電路能夠跑完，在這裡也是差不多意思。&lt;/p&gt;
+&lt;h1&gt;Multiple Issue - Superscalar&lt;/h1&gt;
+&lt;p&gt;由於執行階段（execute stage）內部是由多個不同的功能元件所組成，每個所負責的任務不同，因此具有同時執行多個指令的可能性。然而想要做到這點就必須強化抓取與解碼的功能，才可以同時處理多個指令並派送到適當的功能元件去執行。下圖為示意圖：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Figure 5 – A superscalar microarchitecture" src="http://www.lighterra.com/papers/modernmicroprocessors/superscalarmicroarch2.png" /&gt;&lt;/p&gt;
+&lt;p&gt;不同的功能元件會有獨自的管線，也就代表著擁有不同的階段數。這樣的設計是為了讓簡單的指令可以執行的更快，而非跟著複雜的指令走同一條管線。一般在提到處理器的管線深度時會以 integer 指令來做標準。前面提到的旁通管（bypasses）在這樣的設計下也是存在的，並且是能夠跨管線的。&lt;/p&gt;
+&lt;p&gt;在這樣的設計下，指令流大概如下圖：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Figure 6 – The instruction flow of a superscalar processor" src="http://www.lighterra.com/papers/modernmicroprocessors/superscalar2.png" /&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;CPI = 0.33&lt;/li&gt;
+&lt;li&gt;IPC = 3 = ILP (Instruction-Level Parallelism)&lt;ul&gt;
+&lt;li&gt;能夠同時處理的指令數通常被稱作處理器的 issue width&lt;/li&gt;
+&lt;li&gt;通常功能元件會比 issue width 還要高，畢竟每次需要處理的指令不同，不可能那麼剛好各使用其中一個元件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;現今處理器多半都是 superpipelined-superscalar。&lt;/p&gt;
+&lt;h1&gt;Explicit Parallelism - VLIW&lt;/h1&gt;
+&lt;p&gt;VLIW - Very Long Instruction Word&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;一個指令包含多個小指令&lt;/li&gt;
+&lt;li&gt;指令長度非常長&lt;/li&gt;
+&lt;li&gt;可以減少 fetch, decode 的邏輯複雜度&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;指令流大概如下圖：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="**Figure 7 – The instruction flow of a VLIW processor**" src="http://www.lighterra.com/papers/modernmicroprocessors/vliw2.png" /&gt;&lt;/p&gt;
+&lt;p&gt;多數 VLIW 的設計都不具有互鎖（interlocked）的特性，也就是不會檢查指令間的相依性，這導致一個問題：當 cache miss 時就必須暫停（stall）整個處理器。（其他處理器能夠去處理沒有相依性的指令）&lt;/p&gt;
+&lt;h1&gt;Instruction Dependencies &amp;amp; Latencies&lt;/h1&gt;
+&lt;p&gt;Pipeline 跟 multiple issue (issue width) 的數量是有其限制的，並非可以無限加大加深。看看下列例子：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;a = b * c;
+d = a + 1;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;像上面這樣，指令間基本上都存在著相依性，在這樣的情況 multiple issue 是做不到的，至於 pipeline 則是要看前面指令的複雜性，若是加法，可以透過旁通管（bypass）來將結果餵給下一條指令；若是較複雜的乘法（需要較多 cycle 來完成結果）就無法在一個 cycle（decode → execute）之內把資料準備好。&lt;/p&gt;
+&lt;p&gt;Compiler view: 指令從進入執行階段到產出結果並能夠被使用的這段期間所需的 cycles 數量被稱作指令的延遲（Latency）。&lt;/p&gt;
+&lt;p&gt;載入記憶體內容的延遲是不好處理的，因為它們通常發生在整段程式的前期，也因此無法塞入一些有意義的指令去有效利用資源，同時它們也不好預測（跟 cache hit / miss 有關）。&lt;/p&gt;
+&lt;h1&gt;Branches &amp;amp; Branch Prediction&lt;/h1&gt;
+&lt;p&gt;根據統計，每 6 個指令就會遇到 1 個分支，因此分支的預測是十分重要的議題。&lt;/p&gt;
+&lt;p&gt;程式碼片段：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;if (a &amp;gt; 7) {
+    b = c;
+} else {
+    b = d;
+}
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;經過編譯後：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    &lt;span class="nt"&gt;cmp&lt;/span&gt; &lt;span class="nt"&gt;a&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;7&lt;/span&gt;    &lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;a&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nt"&gt;7&lt;/span&gt; &lt;span class="o"&gt;?&lt;/span&gt;
+    &lt;span class="nt"&gt;ble&lt;/span&gt; &lt;span class="nt"&gt;L1&lt;/span&gt;
+    &lt;span class="nt"&gt;mov&lt;/span&gt; &lt;span class="nt"&gt;c&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;b&lt;/span&gt;    &lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nt"&gt;c&lt;/span&gt;
+    &lt;span class="nt"&gt;br&lt;/span&gt; &lt;span class="nt"&gt;L2&lt;/span&gt;
+&lt;span class="nt"&gt;L1&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;mov&lt;/span&gt; &lt;span class="nt"&gt;d&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;b&lt;/span&gt;    &lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nt"&gt;d&lt;/span&gt;
+&lt;span class="nt"&gt;L2&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;考慮上面的情況，在 line 2 的分支判斷結果確定前，處理器就必須抓取並解碼下一段指令了（有 pipeline）。處理器會作出預測，並執行預測到的指令，但是會等到結果確定才會去做寫入的動作。&lt;/p&gt;
+&lt;p&gt;預測的方法有兩種：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Static branch prediction&lt;ul&gt;
+&lt;li&gt;交由編譯器來做標記&lt;/li&gt;
+&lt;li&gt;loop 類的很簡單，但是其他就比較難&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;On-chip branch prediction table&lt;ul&gt;
+&lt;li&gt;在執行階段做預測&lt;/li&gt;
+&lt;li&gt;理論上是用 1-bit 來做標記，紀錄上次的狀態&lt;/li&gt;
+&lt;li&gt;實務上會用 2-bit 來做標記，來避免一些邊際測資（edge case）破壞整體的預測走向&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;以 Pentium Pro/II/III 為例，再聰明的預測也頂多達到 90% 的準確率，一旦預測失敗便需要承擔 mispredict penalty（取消目前指令，並執行正確指令），大概是 30% 左右的效能損失。&lt;/p&gt;
+&lt;p&gt;為了提高預測的準確率，有許多方法出現：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Two-level adaptive predictor&lt;ul&gt;
+&lt;li&gt;並非單純紀錄分支方向，而是會紀錄歷史脈絡（context），也就是什麼樣的過去走向會導致這次的走向（這邊的脈絡是指同一條分支指令的脈絡，而非跟其他分支之間的關聯）&lt;/li&gt;
+&lt;li&gt;通常會設定紀錄 n 次歷史記錄，也就會有 2^n 種分支歷史狀況&lt;/li&gt;
+&lt;li&gt;能夠預測在 n 次內出現的所有的重複情況的模式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Gshare / Gselect predictor&lt;ul&gt;
+&lt;li&gt;保有全局分支記錄，也就是全部分支共用同一份記錄&lt;/li&gt;
+&lt;li&gt;能夠辨識不同分支之間的關聯性&lt;/li&gt;
+&lt;li&gt;預測容易被其他分支的結果給稀釋&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;現代多數處理器都會實做幾種分支預測器，並在不同情況下使用不同的分支預測器。&lt;/p&gt;
+&lt;h1&gt;Eliminate Branches with Prediction&lt;/h1&gt;
+&lt;p&gt;再借用上一章節的例子說明：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    &lt;span class="nt"&gt;cmp&lt;/span&gt; &lt;span class="nt"&gt;a&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;7&lt;/span&gt;    &lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;a&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="nt"&gt;7&lt;/span&gt; &lt;span class="o"&gt;?&lt;/span&gt;
+    &lt;span class="nt"&gt;ble&lt;/span&gt; &lt;span class="nt"&gt;L1&lt;/span&gt;
+    &lt;span class="nt"&gt;mov&lt;/span&gt; &lt;span class="nt"&gt;c&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;b&lt;/span&gt;    &lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nt"&gt;c&lt;/span&gt;
+    &lt;span class="nt"&gt;br&lt;/span&gt; &lt;span class="nt"&gt;L2&lt;/span&gt;
+&lt;span class="nt"&gt;L1&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="nt"&gt;mov&lt;/span&gt; &lt;span class="nt"&gt;d&lt;/span&gt;&lt;span class="o"&gt;,&lt;/span&gt; &lt;span class="nt"&gt;b&lt;/span&gt;    &lt;span class="o"&gt;;&lt;/span&gt; &lt;span class="nt"&gt;b&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="nt"&gt;d&lt;/span&gt;
+&lt;span class="nt"&gt;L2&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="o"&gt;...&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;試著將 &lt;em&gt;mov&lt;/em&gt; 指令改造一下，讓它能夠在特定條件下再執行：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;cmp a, 7        ; a &amp;gt; 7?
+mov c, b        ; b = c
+cmovle d, b     ; if le, then b = d
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;em&gt;cmovle&lt;/em&gt; 代表著 “conditional move if less than of equal”，它基本上就是照常執行，但是只有在條件符合的情況下才會做寫入，被稱為 “predicated instruction”（在這 predicate 指的是一個 true/false test，語彙力不足，不知怎翻 QQ）。&lt;/p&gt;
+&lt;p&gt;在這個新的指令的幫助下，上面的指令組成變得更好了，除了少了兩個花費很高的分支指令外，平行度也增加了（line 1, 2 可以同時進行了），最重要的是排除掉了 mispredict penalty 發生的可能性。&lt;/p&gt;
+&lt;p&gt;然而上面的情況是較為簡單的，當 if / else 的區塊擁有更多指令需要執行的時候，是否要使用這樣的指令是很難去取捨並決定的。&lt;/p&gt;
+&lt;h1&gt;Instruction Scheduling, Register Renaming &amp;amp; OOO&lt;/h1&gt;
+&lt;p&gt;分支或是長延遲的指令會在管線中塞入泡泡（bubbles，像是 nop）來暫緩後面的指令執行，若能夠對於指令的順序做規劃，讓較後面不會被影響到的指令先拉到前面，跟著上述兩類的指令一同執行也許會更有效率？！&lt;/p&gt;
+&lt;p&gt;有兩種方法：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;動態：在執行時期的硬體端做重新排序&lt;ul&gt;
+&lt;li&gt;處理器的 dispatch 邏輯必須去看多組的指令組，來盡可能地做到最佳的指派任務&lt;/li&gt;
+&lt;li&gt;稱為 out-of-order execution（OOO / OoO / OOE）&lt;/li&gt;
+&lt;li&gt;必須處理好指令間的相依性，避免 hazard 的發生&lt;ul&gt;
+&lt;li&gt;利用 register renaming&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;邏輯設計複雜化、功耗高&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;靜態：在編譯時期由編譯器來最佳化指令的順序&lt;ul&gt;
+&lt;li&gt;稱為 static / compile-time instruction scheduling&lt;/li&gt;
+&lt;li&gt;能夠比硬體端看得更遠、更全面&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;現今多數高效能的處理器都具有 OOO 設計。&lt;/p&gt;
+&lt;h1&gt;The Brainiac Debate&lt;/h1&gt;
+&lt;p&gt;基本上是在講古，也就是前面提到的處理器設計問題，兩大方向（brainiac vs speed-demon）之間的拉扯（trade-off）歷史，並在最後放了圖表來綜觀歷史上各家處理器廠商開發的走向（詳情見&lt;a href="http://www.lighterra.com/papers/modernmicroprocessors/"&gt;原文&lt;/a&gt;）。&lt;/p&gt;
+&lt;h1&gt;The Power Wall &amp;amp; The ILP Wall&lt;/h1&gt;
+&lt;p&gt;Power Wall&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;時脈速度的提升伴隨著熱的提升&lt;/li&gt;
+&lt;li&gt;現有的散熱技術有其限制&lt;/li&gt;
+&lt;li&gt;即便電路能夠以更快的速度運行，但是散熱技術做不到的話就沒辦法如此設計，也就是 “Power Wall”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;ILP Wall&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;載入延遲&lt;/li&gt;
+&lt;li&gt;快取失效（cache miss）&lt;/li&gt;
+&lt;li&gt;分支&lt;/li&gt;
+&lt;li&gt;指令間的相依性&lt;/li&gt;
+&lt;li&gt;由於上述四點，ILP 有其極限，也就是 “ILP Wall”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;What About x86?&lt;/h1&gt;
+&lt;p&gt;儘管 x86 指令集相當複雜，它至今仍能保有競爭力的原因？&lt;/p&gt;
+&lt;p&gt;在現今 x86 處理器中，會將 x86 指令轉換成類似 RISC 的微指令再進行處理，這些類 RISC 的微指令稱為 &lt;em&gt;μops&lt;/em&gt;（唸作 “micro-ops”）。這樣的轉換使得 x86 指令也能夠以快速、RISC-style register-renaming OOO superscalar 核心上跑。&lt;/p&gt;
+&lt;p&gt;基本結構大概如下：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Figure 8 – A &amp;quot;RISCy x86&amp;quot; decoupled microarchitecture." src="http://www.lighterra.com/papers/modernmicroprocessors/riscyx862.png" /&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;decoupled architecture&lt;ul&gt;
+&lt;li&gt;用以實現高效計算&lt;/li&gt;
+&lt;li&gt;將「記憶體存取」與「執行部分」分開來平行處理，方法是實做一個資料緩衝區（data buffer）&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://whatis.techtarget.com/definition/decoupled-architecture"&gt;詳情請見&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;某些 x86 處理器甚至有 “L0 cache” 來紀錄已經轉換好的 μops 避免之後重複轉換，這也是為什麼某些處理器在描述 stages 會有像是 14/19 stages 這樣的情況，14 代表的是 cache hit，19 則是 cache miss 的情況。&lt;/p&gt;
+&lt;h1&gt;Threads - SMT, Hyper-Threading &amp;amp; Multi-Core&lt;/h1&gt;
+&lt;p&gt;如同前面提到的，多數程式並不具備良好的平行度設計，因此設計 superscalar 的處理器並透過 ILP 所能夠提升的效能是很有限的。&lt;/p&gt;
+&lt;p&gt;除了同一支程式內的指令，其他程式或是其他緒程（thread）的指令也可以拿來填充 bubbles 用，Simultaneous Multi-Threading (SMT) 的處理器設計也就為了 thread-level parallelism 而生。與 multi-processor 不同的是，SMT 是在同一個處理器上執行多個緒程，而 multi-processor 雖然也能夠同時處理多個緒程但是在單一個處理器上只有一個緒程在跑（多核心的也是，單一核心只有一個緒程）。&lt;/p&gt;
+&lt;p&gt;以硬體層面來說，設計成 SMT 的樣子並不會需要太多硬體空間，它基本上只需要多一份空間來紀錄程式計數器（program counter）、暫存器、記憶體空間對應等等關於緒程執行狀態的資訊，其他較為複雜的部分像是解碼器、功能元件、快取等等皆能夠共用。&lt;/p&gt;
+&lt;p&gt;SMT 處理器的指令流大概如下圖：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="**Figure 9 – The instruction flow of an SMT processor**" src="http://www.lighterra.com/papers/modernmicroprocessors/smt2.png" /&gt;&lt;/p&gt;
+&lt;p&gt;即便上面關於 SMT 的描述看起來很美好，但實際情況並非如此。以上面描述的情況（可以用其他程式或是其他緒程來填補 bubbles）來說，現實世界多數的情況並非適合讓 SMT 發揮，像是同時有好幾支程式正在活躍地執行的情況是很少出現的。&lt;/p&gt;
+&lt;p&gt;在眾多擁有高度平行性的應用中（資料庫系統、影像處理、3D 圖像渲染、科學運算），多數並沒有以多緒程的方式來進行撰寫，且多半的瓶頸都是記憶體頻寬並非是處理器效能。&lt;/p&gt;
+&lt;p&gt;此外由於功能元件部分是共用的，若多個緒程都在做差不多的事情的話（需要相同的功能元件），那即便是 SMT 的設計仍舊必須無法做到有效利用。SMT 適合的情況是平常以 memory latency 為瓶頸的應用，也因此讓 SMT 的商業宣傳十分尷尬，一款 SMT 處理器某些時候能夠快得像是擁有「兩個」處理器在同時工作，有時候就像是「兩個」很爛的處理器。&lt;/p&gt;
+&lt;h1&gt;More Cores or Wider Cores?&lt;/h1&gt;
+&lt;p&gt;multiple-issue 的分配邏輯電路是相當複雜的，基本上是以 issue width 的次方倍（n 個候選指令要互相比較）在複雜化的，同時，為了服務多個同步存取需要多埠暫存器以及快取，而這造成電路的拉長也因此降低了時脈速度，因此核心 issue 數並非越多越好，若拿所需要的整體空間去換成較弱但多個核心，表現不一定會比較差。&lt;/p&gt;
+&lt;p&gt;到底哪一種好？端看程式的用途。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;簡單但多個核心&lt;ul&gt;
+&lt;li&gt;多個活躍但受到記憶體存取延遲所影響的緒程&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;複雜但是較少核心&lt;ul&gt;
+&lt;li&gt;大部分應用都適用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;兩者之間佔比的拉扯仍舊有很多空間能夠做嘗試（像是非對稱的設計 - 一個複雜 + 多個簡單的）。&lt;/p&gt;
+&lt;h1&gt;Data Parallelism - SIMD Vector Instructions&lt;/h1&gt;
+&lt;p&gt;除了 instruction-level parallelism 與 thread-level parallelism 外，還有一個 data-level parallelism 能夠利用，又稱為 SIMD parallelism (Single Instruction Multiple Data)、vector processing。&lt;/p&gt;
+&lt;p&gt;在像是媒體處理相關的應用上，常常需要對一整組的資料執行相同的指令，像是影像處理中對於像素的呈現：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Figure 10" src="http://www.lighterra.com/papers/modernmicroprocessors/shortvectoradd2.png" /&gt;&lt;/p&gt;
+&lt;p&gt;SIMD 指令在適當的情境下可以帶來很大的加速，但要透過編譯器來自動使用 SIMD 指令是相當難的，因為一般撰寫方式傾向序列化，這讓編譯器很難去判斷兩個指令是相互獨立且可以平行運作的。要好好利用必須得重新實做相關部分的程式碼。好消息是，多數常用的函式庫近年來都有在進行改寫。&lt;/p&gt;
+&lt;h1&gt;Memory &amp;amp; The Memory Wall&lt;/h1&gt;
+&lt;p&gt;為了從記憶體上載入資料來做計算花費許多時間，然而要建立一個高速的記憶體系統是很困難的：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;記憶格（memory cell）的充放電需要時間&lt;/li&gt;
+&lt;li&gt;跟記憶體之間的訊號傳遞需要時間&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;必須在既有的物理條件下繞道而行。&lt;/p&gt;
+&lt;p&gt;現代處理器能做到的是將記憶體控制器整合進處理器晶片，加快了原先較慢 cycles（原先與晶片分開需要 2 bus cycles 來做資料傳輸）。&lt;/p&gt;
+&lt;p&gt;處理器與記憶體之間的運作速度差距稱作 memory wall。&lt;/p&gt;
+&lt;h1&gt;Caches &amp;amp; The Memory Hierarchy&lt;/h1&gt;
+&lt;p&gt;現代處理器利用快取來解決上一節提到的 memory wall，快取座落在處理器晶片上或附近。&lt;/p&gt;
+&lt;p&gt;一般來說會有一個主要的快取 - “level 1 (L1)” 快取（一般會將資料與指令的快取分開，分別為 D-cache 與 I-cache）放在處理器晶片上，大小為 8-64k；再遠一點但仍在晶片上會有另一個 “level-2 (L2)” 快取，大小為 N kb ~ N mb；有些甚至會有 L3, L4 等等。on-chip 快取、off-chip external 快取（E-cache）以及 RAM 三者組成記憶體階層（memory hierarchy）。&lt;/p&gt;
+&lt;p&gt;標準的現代記憶體階層長得大概如下：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;em&gt;Level&lt;/em&gt;&lt;/th&gt;
+&lt;th&gt;&lt;em&gt;Size&lt;/em&gt;&lt;/th&gt;
+&lt;th&gt;&lt;em&gt;Latency&lt;/em&gt;&lt;/th&gt;
+&lt;th&gt;&lt;em&gt;Physical Location&lt;/em&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;L1 cache&lt;/td&gt;
+&lt;td&gt;32 KB&lt;/td&gt;
+&lt;td&gt;4 cycles&lt;/td&gt;
+&lt;td&gt;inside each core&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;L2 cache&lt;/td&gt;
+&lt;td&gt;256 KB&lt;/td&gt;
+&lt;td&gt;12 cycles&lt;/td&gt;
+&lt;td&gt;beside each core&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;L3 cache&lt;/td&gt;
+&lt;td&gt;6 MB&lt;/td&gt;
+&lt;td&gt;~21 cycles&lt;/td&gt;
+&lt;td&gt;shared between all cores&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;L4 E-cache&lt;/td&gt;
+&lt;td&gt;128 MB&lt;/td&gt;
+&lt;td&gt;~58 cycles&lt;/td&gt;
+&lt;td&gt;separate eDRAM chip&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;RAM&lt;/td&gt;
+&lt;td&gt;4+ GB&lt;/td&gt;
+&lt;td&gt;~117 cycles&lt;/td&gt;
+&lt;td&gt;SDRAM DIMMs on motherboard&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Swap&lt;/td&gt;
+&lt;td&gt;100+ GB&lt;/td&gt;
+&lt;td&gt;10,000+ cycles&lt;/td&gt;
+&lt;td&gt;hard disk or SSD&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;現代 L1 快取的 hit rates 大概可以達到約 90%，這是因為多數程式都擁有時間與空間上的 locality。同時，為了好好利用空間上的 locality，在從 RAM 上複製資料到快取時，是複製從要求的位址開始好幾個位元組上來，稱為 cache line。&lt;/p&gt;
+&lt;p&gt;&lt;img alt="**Figure 11 – A cache lookup**" src="http://www.lighterra.com/papers/modernmicroprocessors/cachelookup2.png" /&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Address 被拆成兩部分&lt;ul&gt;
+&lt;li&gt;lower part（右邊）作為索引，來定位快取資料的進入點&lt;/li&gt;
+&lt;li&gt;higher part（左邊）與 tag 做比對，來判斷是否是想要的區塊，因為快取用 lower bit 來做索引，這樣一來不同位址但是相同 lower bit 的會被放到同一個快取的欄位，tag 可以用來判斷位址是否正確&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;快取的詳細運作可參考：&lt;a href="https://blog.opasschang.com/2015/01/09/discussion-on-memory-cache/"&gt;&lt;strong&gt;淺談 memory cache&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;快取的查找有兩個方式：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;virtual address&lt;ul&gt;
+&lt;li&gt;可能會有不同程式、相同虛擬位址、不同物理位址的情況，這樣一來每次做 context switch 時就必須 flush&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;physical address&lt;ul&gt;
+&lt;li&gt;會有額外的虛擬轉物理的操作延遲&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;現今常用的技巧是混合法，使用虛擬來查找，但是 tag 是用物理位址。在用虛擬位址來定位快取欄位時，高位位址可以同時進行虛擬與物理間的對應轉換（TLB lookup），這種方式稱為 virtually-indexed physically-tagged cache。&lt;/p&gt;
+&lt;h1&gt;Cache Conflicts &amp;amp; Associativity&lt;/h1&gt;
+&lt;p&gt;為了要能夠在快取上快速存取想要的資料，最簡單的方法是，使用簡單的對應（mapping）機制，像是前面的單純使用低位位元來定位（稱為 direct-mapped cache），且只保留「最近」使用到的資料。然而，這在特定情況下會造成很大的問題，像是若程式需要不斷的存取兩個位址，但是那兩個位址都對應到快取上的同一個欄位，這樣的問題稱之為 cache conflict。在這樣的情況下，即便程式運行具備時間上的 locality，處理器仍舊只能不斷的去存取 main memory，使得快取顯得毫無用處。&lt;/p&gt;
+&lt;p&gt;為了處理這樣的問題提出了 N-way set-associative cache，基本上就是額外開 N - 1 張表來當作快取，來提高對於衝突的容忍度。然而，隨著 N 的提高，雖然看起來越聰明但是邏輯電路複雜度也會隨之提高（像是要需要更新的使用時間戳記會變多），一般來說以 4-way 最為理想。&lt;/p&gt;
+&lt;h1&gt;Memory Bandwidth vs Latency&lt;/h1&gt;
+&lt;p&gt;頻寬跟延遲的差異：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;以高速公路為例&lt;ul&gt;
+&lt;li&gt;頻寬代表的是高速公路上的車道數量有多少&lt;/li&gt;
+&lt;li&gt;延遲代表的是這條高速公路（從 A → B）有多遠&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;這兩者之間的 trade-off 也是根據不同的應用情形而改變。以 pointer-chasing 程式為例（編譯器或是資料庫系統），適合的是延遲較低的設計；以簡單且線性存取的程式為例（影像處理），適合的是頻寬較大的設計。&lt;/p&gt;
+&lt;p&gt;近年來對於記憶體存取延遲的改進是透過 synchronously clocked DRAM (SDRAM) 的設計來做到的，設計上主要有兩個特點：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;與中央處理器計時同步&lt;ul&gt;
+&lt;li&gt;對於資料的讀寫具有預測性，可以精準的傳遞資料，不需要讓處理器額外等待記憶體的週期跟上&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;管線的使用&lt;ul&gt;
+&lt;li&gt;以往每個對於 main memory 的存取都要一個個來，有了管線的設計，在前一個存取的資料還沒回來前就能夠送出下一道存取的指令&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;補充&lt;/h1&gt;
+&lt;p&gt;&lt;strong&gt;Synchronous Sequential Logic&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;ref: Digital Design With An Introduction to the Verilog HDL Fifth Edition&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Combinational v.s. Sequential&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Combinational Logic&lt;ul&gt;
+&lt;li&gt;輸出僅依據輸入，沒有記憶的概念（在這記憶指的是依賴過去的值）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Sequential Logic&lt;ul&gt;
+&lt;li&gt;可以儲存、保留過去的值，並在後面用上&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Sequential Circuits&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://d2mxuefqeaa7sj.cloudfront.net/s_271F3BA10D741EF5B1A5C3CAA317B947F054A8D13EEC430A3DADB99EFDB11EE6_1547471646350_+2019-01-14+9.13.45.png" /&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;儲存在記憶元件上的資訊定義著 sequential circuit 的狀態&lt;/li&gt;
+&lt;li&gt;由輸入、輸出、內部狀態的時間序列所規定（定義）的&lt;/li&gt;
+&lt;li&gt;有兩種類別，由訊號的時機來區分：&lt;ul&gt;
+&lt;li&gt;synchronous&lt;ul&gt;
+&lt;li&gt;被 clock 所支配&lt;/li&gt;
+&lt;li&gt;狀態是可預測的&lt;/li&gt;
+&lt;li&gt;同時也被 clock 所限制，clock 的間隔必須足夠長，讓邏輯電路能夠完全做完&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;asynchronous&lt;ul&gt;
+&lt;li&gt;由輸入支配&lt;/li&gt;
+&lt;li&gt;僅被邏輯電路的傳播延遲所限制&lt;/li&gt;
+&lt;li&gt;有 race condition 的風險&lt;/li&gt;
+&lt;li&gt;難以設計與實做，因此不常見&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Storage Elements: Latches&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;儲存元件有很種，主要以下列要素做區分：&lt;ul&gt;
+&lt;li&gt;輸入的數量&lt;/li&gt;
+&lt;li&gt;哪個輸入影響了狀態的值&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;是由訊號的值來驅動的。（flip-flop 由訊號的變化來驅動）&lt;/li&gt;
+&lt;li&gt;SR Latch&lt;ul&gt;
+&lt;li&gt;由兩個 NOR / NAND gates 所組成&lt;/li&gt;
+&lt;li&gt;兩個輸入：S, R 分別代表設定（set）與重設（reset）&lt;/li&gt;
+&lt;li&gt;輸出有 Q, Q’，(1, 0) 時稱作 set state，(0, 1) 稱作 reset state&lt;/li&gt;
+&lt;li&gt;在 NOR gate (NAND gate) 的設計下 S, R 不可同時為 1 (0)&lt;/li&gt;
+&lt;li&gt;一般情況下兩個輸入都會維持 0 (1)，只有當狀態需要改變時才會有 1 (0) 的出現&lt;/li&gt;
+&lt;li&gt;一旦設定好狀態需要馬上降回 0 (1)&lt;/li&gt;
+&lt;li&gt;NAND gates 版本可被稱為 S’R’ latch&lt;/li&gt;
+&lt;li&gt;通常會加入一個額外的輸入來決定說什麼時候要依據 S, R 來改變訊號&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;小記：&lt;ul&gt;
+&lt;li&gt;與室友討論後，目前心得是不需要去思考迴路的初始值（也就是 Q, Q’），只要初始值符合規定（互為對方的補數），電路到穩定態時會是符合真值表的&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;D Latch&lt;ul&gt;
+&lt;li&gt;為避免 SR Latch 而產生&lt;/li&gt;
+&lt;li&gt;可以想像為 S 就是 D，而 R 是 D’&lt;/li&gt;
+&lt;li&gt;因其設計而多作為內部儲存元素&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</summary></entry><entry><title>[Note] Learn from source code of qsort and std::sort</title><link href="https://naetw.github.io/posts/2018/08/13/learn-from-source-code-of-qsort-and-std-sort/" rel="alternate"></link><published>2018-08-13T22:50:00+08:00</published><updated>2018-08-13T22:50:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2018-08-13:posts/2018/08/13/learn-from-source-code-of-qsort-and-std-sort/</id><summary type="html">&lt;h1&gt;背景&lt;/h1&gt;
+&lt;p&gt;學期中某次跟室友 Ys Liu 聊到 &lt;code&gt;qsort&lt;/code&gt;，當時只記得有聽過它的實作不是單純 quicksort 而已，但是從沒研究過有哪些排序演算法在裡面，於是暑假找個時間來研究一下。&lt;/p&gt;
+&lt;h1&gt;qsort&lt;/h1&gt;
+&lt;h1&gt;std::sort&lt;/h1&gt;
+&lt;blockquote&gt;
+&lt;p&gt;這部分後半內容是閱讀 &lt;code&gt;std::sort&lt;/code&gt; 原始碼以及「&lt;a href="http://feihu.me/blog/2014/sgi-std-sort/"&gt;知无涯之std::sort源码剖析&lt;/a&gt;」所整理而成的筆記&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a href="https://en.wikipedia.org/wiki/Introsort"&gt;Introsort (Introspective Sort)&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Introsort 是為了解決 quicksort 在最壞的情況下複雜度 (O(N^2)) 惡化的問題而研究出的演算法，在這個演算法中還應用到了另外兩個也是很常見的演算法：heapsort &amp;amp; insertion sort。&lt;/p&gt;
+&lt;h3&gt;Heapsort&lt;/h3&gt;
+&lt;p&gt;利用 &lt;a href="https://en.wikipedia.org/wiki/Binary_heap"&gt;binary heap（二元堆積）&lt;/a&gt;這個資料結構完成的排序法。&lt;/p&gt;
+&lt;p&gt;Binary heap 定義為一棵二元樹，並有兩個限制：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;形狀特性：必須是一棵 &lt;a href="https://en.wikipedia.org/wiki/Binary_tree#Types_of_binary_trees"&gt;complete binary tree&lt;/a&gt;，也就是除了最後一層外，每一層都必須填滿的狀態，且節點必須由左至右填入。&lt;/li&gt;
+&lt;li&gt;堆積特性：可分為 max heap &amp;amp; min heap，代表的是節點的鍵值的儲存順序。這邊以 max 為例，任一個節點的鍵值都必須大於這個節點的子節點。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;透過堆積特性可以確保 root 擁有該棵樹中最大/小的鍵值，heapsort 便是利用這個特性來做排序。&lt;/p&gt;
+&lt;p&gt;演算法：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;將陣列堆積化（這邊用 max/min 都行，以 max 為例）&lt;ul&gt;
+&lt;li&gt;堆積化：&lt;strong&gt;由上而下&lt;/strong&gt;讓每個子樹都符合 max heap 的特性。&lt;/li&gt;
+&lt;li&gt;利用 complete binary tree 的特性：ith 節點的左子樹一定位於 (2i)th，而右子樹位於 (2i + 1)th (1-based)。可以&lt;strong&gt;由下往上&lt;/strong&gt;（上方為往 root 的方向）對整棵樹堆積化。而開始的節點因為 complete binary tree 的特性可以直接選定位於 ⌊(N / 2)⌋th 的節點。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;經過 1. 陣列已經具有 max heap 的特性，接著就是利用特性「root 具有最大值」來進行排序：&lt;ol&gt;
+&lt;li&gt;將 root 跟最後一個 node 做交換，然後陣列的大小 N = N - 1（也就是不管&lt;strong&gt;目前&lt;/strong&gt;的最後一個節點），對 root（現在具有比兩個子數還要小的鍵值）再做一次堆積化。&lt;/li&gt;
+&lt;li&gt;重複 2-1 的動作直到陣列大小被視為 1 的時候。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Pseudocode（修改自 &lt;a href="https://en.wikipedia.org/wiki/Heapsort#Pseudocode"&gt;wiki&lt;/a&gt;）：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;procedure HeapSort(arr, count) is
+  // 輸入： 未排序過的陣列 arr，長度為 count，為 1-based
+
+  // 將陣列堆積化，好讓最大值位於 root (1)
+  BuildMaxHeap(arr, count)
+
+  // 下面的迴圈用來維護以下狀態：
+  // arr[1, end] 是 max heap
+  // index 大於 end 的每個元素都大於 1 ~ end 之間的任一元素
+  // arr(end, count] 是由小排到大的
+  end ← count
+  while end &amp;gt; 1 do
+    // 將最大值（arr[1]）放到目前長度的最後一個
+    // 這邊會說目前長度是因為 end 會不斷縮小，好讓每次被放過去的最大值是排好的也不會再被影響
+    swap(arr[end], arr[1])
+    end ← end - 1
+    // 上面的 swap 動作破壞了 max heap 的特性，因此需要重新調整
+    MaxHeapify(arr, 1, end)
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;相較於 quicksort 在最壞的情況下時間複雜度會跑到 O(N^2)，heapsort 在任何情況下都能夠維持在 O(NlogN) 也因為這個優點在 introsort 中扮演重要的角色。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Heapsort 詳細的介紹參考：&lt;a href="http://alrightchiu.github.io/SecondRound/comparison-sort-heap-sortdui-ji-pai-xu-fa.html"&gt;Comparison Sort: Heap Sort (堆積排序法)&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;Insertion Sort&lt;/h3&gt;
+&lt;p&gt;一個非常簡單的排序演算法，顧名思義就是把各個元素插入到適當的位置。&lt;/p&gt;
+&lt;p&gt;Pseudocode（修改自 &lt;a href="https://en.wikipedia.org/wiki/Insertion_sort"&gt;wiki&lt;/a&gt;）：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;// 陣列 arr 為 0-based
+// 從 1 開始，因為單個元素 arr[0, 1) 是很明顯排序過的
+i ← 1
+while i &amp;lt; length(arr)
+  // 先把要插入的元素暫存起來，這樣搬移的時候可以只寫一個值，也就是直接位移比它大的值，而非不斷互換
+  x ← arr[i]
+
+  // 接下來的迴圈要把 i 以前的數字都掃過，來找到 x 要插入的位置
+  j ← i - 1
+  while j &amp;gt;= 0 and arr[j] &amp;gt; x
+    arr[j + 1] ← arr[j]
+    j ← j - 1
+  end while
+
+  // 將 x 插入適當的位置，此時的 j 是 i 位置左邊所有元素中由右而左第一個比 x 小的元素
+  // 把 x 插入在 j 的後一格
+  arr[j + 1] ← x
+  i ← i + 1
+end while
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;透過上面的 pseudocode 可以知道這個演算法的瓶頸基本上是在「尋找適當的位置」這件事上，也就是內圈的迴圈。但也因為這個性質，在每個元素都離「正確位置」很近的情況下，插入排序法的表現是很好的。&lt;/p&gt;
+&lt;p&gt;對於大致排序好的陣列來說，若每個元素距離正確位置 k 格，那整體的複雜度可以達到 O(Nk)，基本上是接近到 O(N) 的。這個優點便被 introsort 所利用，後面會看到使用的時機。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href="https://www.toptal.com/developers/sorting-algorithms"&gt;這裡&lt;/a&gt;有各種陣列情況下使用不同排序演算法的視覺化比較，挺酷的。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;std::sort&lt;/h3&gt;
+&lt;p&gt;接下來透過 &lt;code&gt;std::sort&lt;/code&gt; 正式進入 introsort。&lt;/p&gt;
+&lt;p&gt;前面提到 quicksort 在 pivot 選擇不當的情況下會造成複雜度 O(N^2) 的情況以及 quicksort 本身的實作是用遞迴的方式，也就需要呼叫函式進而造成一些額外的花費。這些問題在 introsort 中都被很漂亮的解決，它集結了上面提到的三種排序演算法各自的優點：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;當需要排序的元素很多的時候採用正常的 quicksort。&lt;/li&gt;
+&lt;li&gt;透過 quicksort 的分段操作，一旦分段出來的資料夠小（小於某個 threshold）就改用 insertion sort，此時因為 quicksort 的分段讓資料基本上大致排序過了，且資料夠小，可以達到上面提到的 insertion sort 的優點：讓排序複雜度接近 O(N)。&lt;/li&gt;
+&lt;li&gt;在分段過程中，若次數過多造成遞迴過深的時候（pivot 選的不夠好，使複雜度變成 worst case O(N^2)），改用 heapsort 來讓效率維持在 O(NlogN)。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;std::sort&lt;/code&gt; 的實作（以 &lt;a href="https://gcc.gnu.org/onlinedocs/libstdc++/latest-doxygen/a00521_source.html#l01940"&gt;GNU libstdc++ latest-doxygen&lt;/a&gt; 來分析，&lt;strong&gt;底下會省略部分程式碼，完整版可看左方的連結&lt;/strong&gt;）：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;template&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="kr"&gt;inline&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; 
+                 &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="n"&gt;depth_limit&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;__introsort_loop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;__lg&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;__final_insertion_sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;這裡有兩個函式，首先是 &lt;code&gt;__introsort_loop&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;template&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;__introsort_loop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                      &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                      &lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="n"&gt;depth_limit&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_S_threshold&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;depth_limit&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="n"&gt;partial_sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+      &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+    &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;depth_limit&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;cut&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;__unguarded_partition_pivot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;__introsort_loop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cut&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;depth_limit&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cut&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;紀錄上面短短的幾行程式碼中一些很有趣的技巧：&lt;/p&gt;
+&lt;p&gt;Introsort 在一般情況下是使用 quicksort，而平常 quicksort 的結構：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;procedure quicksort(arr, left, right)
+  if left &amp;lt; right
+    select the pivotIndex
+    pivotNewIndex = partition(arr, left, right, pivotIndex)
+    // 遞迴下去處理左半邊
+    quicksort(arr, left, pivotNewIndex - 1)
+    // 遞迴下去處理右半邊
+    quicksort(arr, pivotNewIndex + 1, right)
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;將兩個相互比較發現有些微妙的不同，&lt;code&gt;__introsort_loop&lt;/code&gt; 除了本身為了解決 quicksort 缺點的設計外還有一些 optimization 的巧思設計：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;使用迴圈，而非單純的 &lt;code&gt;if&lt;/code&gt; 判斷式。&lt;/li&gt;
+&lt;li&gt;迴圈並非單純判斷 &lt;code&gt;first &amp;lt; last&lt;/code&gt;，而有一個 &lt;code&gt;_S_threshold&lt;/code&gt; 去判斷區間大小，這是先前提到的「當區段的資料夠小就改用 insertion sort」。&lt;/li&gt;
+&lt;li&gt;有一個 &lt;code&gt;if (depth_limit == 0)&lt;/code&gt;，這邊也是先前提到的「當遞迴過深改用 heapsort」。&lt;/li&gt;
+&lt;li&gt;在做分割前的 pivot 選擇使用了中位數來避免 worst case。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;乍看&lt;/strong&gt;只有處理右半邊陣列的遞迴呼叫。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;strong&gt;遞迴結構：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;1. &amp;amp; 5. 搭配起來有個很酷的 optimization 技巧，仔細來看看 5. 提到的「&lt;strong&gt;乍看&lt;/strong&gt;只有處理右半邊陣列的遞迴呼叫」：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_S_threshold&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="c1"&gt;// ...&lt;/span&gt;
+  &lt;span class="c1"&gt;// Some check for using other sorting algorithms&lt;/span&gt;
+  &lt;span class="c1"&gt;// ...&lt;/span&gt;
+  &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;cut&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;__unguarded_partition_pivot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;__introsort_loop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cut&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;depth_limit&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;cut&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在呼叫完 &lt;code&gt;__introsort_loop&lt;/code&gt; 後接著有一條敘述式是 &lt;code&gt;last = cut&lt;/code&gt;，這是關鍵所在，執行完這條指令後 &lt;code&gt;last&lt;/code&gt; 被設定為剛剛的分割點，也就是對現在這個 &lt;code&gt;while&lt;/code&gt; 迴圈來說&lt;strong&gt;陣列變成了左半邊的陣列&lt;/strong&gt;，接著又因為這是個&lt;strong&gt;迴圈結構&lt;/strong&gt;，因此，前面乍看之下沒有處理到的左半邊陣列在下一次迴圈不管是繼續執行 introsort、因為資料量小於 threshold 而跳出去執行 insertion sort，還是因為遞迴過深而使用 heapsort，它都會正確地被處理。&lt;/p&gt;
+&lt;p&gt;下面用圖示來比較一下兩者差異（數字代表被處理的順序）：&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Imgur" src="https://i.imgur.com/Ur3A68J.png" /&gt;&lt;/p&gt;
+&lt;p&gt;利用 &lt;code&gt;last = cut&lt;/code&gt; 修改陣列屬性搭配 &lt;code&gt;while&lt;/code&gt; 迴圈，減少函式呼叫。在擁有巨量的資料需要排序時，可以省下不少時間。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;分割演算法：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;這邊跟自己大三上修 OS 時作業寫的 quicksort partition 相比了一下，才發現自己寫的演算法有許多不必要的資料搬移 Orz：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// 之前寫的作業版本（不良示範）&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="cm"&gt;/*&lt;/span&gt;
+&lt;span class="cm"&gt;  找出頭尾跟中間元素的中位數，然後跟最後一個元素互換，後面拿來當 pivot&lt;/span&gt;
+&lt;span class="cm"&gt;  */&lt;/span&gt;
+
+  &lt;span class="n"&gt;pivot&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;right&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+  &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;left&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int32_t&lt;/span&gt; &lt;span class="n"&gt;j&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;left&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;j&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;right&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;=&lt;/span&gt; &lt;span class="n"&gt;pivot&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="n"&gt;swap&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;j&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+      &lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="n"&gt;swap&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;right&lt;/span&gt;&lt;span class="p"&gt;]);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="c1"&gt;// end&lt;/span&gt;
+
+&lt;span class="c1"&gt;// STL 的版本（pivot 為 first, last &amp;amp; (first + last) / 2 三個位置的中位數）&lt;/span&gt;
+&lt;span class="n"&gt;template&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kr"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;__unguarded_partition&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; 
+                                           &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                                           &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;pivot&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;true&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;pivot&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+      &lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;pivot&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+      &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;iter_swap&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt; 
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;當有很多個元素都小於 pivot 的時候，我的版本會不斷的呼叫 &lt;code&gt;swap&lt;/code&gt; 原地交換，而 STL 的版本則是遇到兩個「位於不合理位置」的元素再做互換，比較合理而且省下很多不必要的操作。&lt;/p&gt;
+&lt;p&gt;除此之外，可以看到 STL 的版本第二層的兩個 &lt;code&gt;while&lt;/code&gt; 迴圈都沒有對 first / last 判斷是否超過範圍，可以這樣做的原因是 pivot 的選擇為中位數。&lt;/p&gt;
+&lt;p&gt;試想一個極端例子（假設 first &amp;lt; mid &amp;lt; last），就算 first 一直往後移，而很剛好的每個都比 pivot 小，但是 last 一定大於 pivot 也就是 mid 的值，這時候 first 在 last 的位置，而下面的 &lt;code&gt;--last&lt;/code&gt; 就會讓 first 跟 last 交錯，而且由於前面很剛好的除了 last 每個都比 pivot 小，所以第二個 &lt;code&gt;while&lt;/code&gt; 也會直接結束，然後走進 &lt;code&gt;if&lt;/code&gt; 做 return。&lt;/p&gt;
+&lt;p&gt;反過來 first &amp;gt; mid &amp;gt; last 情況也是一樣，只是換成 last 去交錯 first 而已。總的來說，因為是選擇中位數，所以即便是在移動最遠的情況下，它一定還是會停下，差別只有是在 first 附近或是在 last 附近相會。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;最小分段長度：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;接著是前面提到的 2.「迴圈並非單純判斷 &lt;code&gt;first &amp;lt; last&lt;/code&gt;，而有一個 &lt;code&gt;_S_threshold&lt;/code&gt; 去判斷區間大小」：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;_S_threshold&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="c1"&gt;// ...&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;當陣列區間長度小於這個門檻，就會直接跳出迴圈離開 &lt;code&gt;__introsort_loop&lt;/code&gt;，等到最後再對完整的陣列做 &lt;code&gt;__final_insertion_sort&lt;/code&gt;，這樣做的原因是：當區間太小的時候，再繼續使用遞迴呼叫來分段處理的 cost 是比較大的，再加上分到這麼小段時，即便排序尚未完全，但也有了大致的順序，這時交給 insertion sort 是十分合適的。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;__final_insertion_sort&lt;/strong&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;template&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;Size&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="kr"&gt;inline&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                 &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;Size&lt;/span&gt; &lt;span class="n"&gt;depth_limit&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;__introsort_loop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;__lg&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;__final_insertion_sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;template&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;__final_insertion_sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                            &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;-&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_S_threshold&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;__insertion_sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_S_threshold&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+    &lt;span class="n"&gt;__unguarded_insertion_sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;_S_threshold&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;__insertion_sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;template&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;__insertion_sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                      &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;iterator_traits&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;::&lt;/span&gt;&lt;span class="n"&gt;value_type&lt;/span&gt; 
+        &lt;span class="n"&gt;val&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+      &lt;span class="n"&gt;copy_backward&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+      &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+      &lt;span class="n"&gt;__unguarded_linear_insert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt; 
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;template&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;__unguarded_insertion_sort&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                                &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;first&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;__unguarded_linear_insert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt; 
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="k"&gt;typename&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;__unguarded_linear_insert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;iterator_traits&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;::&lt;/span&gt;&lt;span class="n"&gt;value_type&lt;/span&gt; 
+    &lt;span class="n"&gt;val&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="n"&gt;RandomAccessIterator&lt;/span&gt; &lt;span class="n"&gt;next&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;last&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;next&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="k"&gt;while&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;val&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;next&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;next&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;next&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="o"&gt;--&lt;/span&gt;&lt;span class="n"&gt;next&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;last&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;val&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;最後是 &lt;code&gt;__final_insertion_sort&lt;/code&gt;，裡面也有一些 optimization 的巧思：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;__final_insertion_sort&lt;/code&gt;&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;if&lt;/code&gt; 分支來處理不同大小的陣列，&lt;code&gt;&amp;lt;= int(_S_threshold)&lt;/code&gt; 的直接用單純的 &lt;code&gt;__insertion_sort&lt;/code&gt; 來處理，&lt;code&gt;&amp;gt; int(_S_threshold)&lt;/code&gt; 的分成兩段來處理（見第二點）。&lt;/li&gt;
+&lt;li&gt;第二段使用 unguarded 的方法可以&lt;strong&gt;減少比較大小的操作&lt;/strong&gt;，而能夠做到 unguarded 的原因是最一開始的 &lt;code&gt;introsort&lt;/code&gt; 已經確保最小值會位於 first ~ first + int(_S_threshold) 區間，這樣一來，即便 &lt;code&gt;__unguarded_insertion_sort&lt;/code&gt; 會不斷的往 first 方向走，一定會被最小值給停下來。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;__insertion_sort&lt;/code&gt;&lt;ul&gt;
+&lt;li&gt;在 &lt;code&gt;for&lt;/code&gt; 迴圈中的分支&lt;ol&gt;
+&lt;li&gt;當前 i 位置的值小於陣列的頭，這裡不同於平常的 insertion sort 需要從 i 一路往 first 方向一個個比較，而是把 i 紀錄起來，然後&lt;strong&gt;前面的子陣列直接往後挪動一格，減少了一個個比較的時間花費&lt;/strong&gt;。
+可以這樣做的原因是&lt;strong&gt;在 i 以前（不包含 i）的子陣列一定是排序過的&lt;/strong&gt;，所以若 i 比 first 還小那一定要放在子陣列的最前面。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;else&lt;/code&gt; 這邊做的就是平常的 insertion sort：從 i 往 first 方向走，一個個比較，直到遇到比 *i 還要小的數值。比較特別的是裡面的實作沒有檢查是否越界，原因很簡單，第一點的 &lt;code&gt;if&lt;/code&gt; 沒有通過便已經代表當前處理的子陣列（[first, i]）的最小值便是 first，所以 i 就算不斷往前也不可能超過 first。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;結語：&lt;/p&gt;
+&lt;p&gt;真的不愧是 STL，把一些小細節的性質運用到淋漓盡致，雖然以後用上這邊學到的技巧來自幹排序演算法的機會大概沒有，但是在閱讀大師們的程式碼的過程還是十分有趣的。&lt;/p&gt;</summary><category term="C"></category><category term="Cpp"></category></entry><entry><title>[Note] 你所不知道的 C 語言：指標篇</title><link href="https://naetw.github.io/posts/2018/07/23/jserv-c-course-pointer-note/" rel="alternate"></link><published>2018-07-23T13:56:00+08:00</published><updated>2018-07-23T13:56:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2018-07-23:posts/2018/07/23/jserv-c-course-pointer-note/</id><summary type="html">&lt;blockquote&gt;
+&lt;p&gt;最近有空開始看 C 語言講座系列的直播，此系列主要記下 Jserv 在直播中提過但是沒有細講或是自己有興趣的內容。其餘內容請參閱下方共筆連結。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://hackmd.io/s/HyBPr9WGl"&gt;原始課程共筆連結&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;Declaration 的解讀&lt;/h2&gt;
+&lt;h3&gt;小小頭腦體操&lt;/h3&gt;
+&lt;p&gt;取自 &lt;a href="http://www.literateprogramming.com/ctraps.pdf"&gt;C Traps and Pitfalls&lt;/a&gt; 的案例 "Understanding Declarations"。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)())&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;要理解上述的 statement，個人認為需要對執行程式的背後機制有些認識：&lt;/p&gt;
+&lt;p&gt;首先程式（狹義上可說可執行檔）是一個靜態的概念，是由一些指令（機器碼 machine code）以及資料所組成的檔案（machine code 其實也是資料，不過會被放在被標記為可執行的區塊中），要執行程式會需要將程式載入至記憶體中，再由 CPU 去抓取指令來執行，這個抓取的動作便需要有指令所在位置的資訊。以一個簡單的程式為例：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;func&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;puts&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello World&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;func&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在 main 中呼叫了 &lt;code&gt;func()&lt;/code&gt; 這個函式，代表著此時 CPU 要去存放 &lt;code&gt;func()&lt;/code&gt; 的指令的位址來讀機器碼，在 CPU 中有個 Program Counter（又稱 Instruction Pointer）的暫存器用來記錄此時執行到哪條指令，也就是該暫存器是儲存一個位址，而該位址所存放的資料便是機器碼。&lt;/p&gt;
+&lt;p&gt;可以用 &lt;a href="https://www.gnu.org/software/binutils/"&gt;GNU Bintuils&lt;/a&gt; 中的 &lt;code&gt;objdump&lt;/code&gt; 來觀察，對可執行檔下以下指令：&lt;code&gt;objdump -d -M intel &amp;lt;your executable file&amp;gt;&lt;/code&gt; 便可以觀察到如下資訊&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ objdump -d -M intel a.out
+...
+
+Disassembly of section .text:
+
+0000000100000f40 &amp;lt;_func&amp;gt;:
+   100000f40:   55                      push   rbp
+   100000f41:   48 89 e5                mov    rbp,rsp
+   100000f44:   48 83 ec 10             sub    rsp,0x10
+   ...
+
+0000000100000f60 &amp;lt;_main&amp;gt;:
+   100000f60:   55                      push   rbp
+   100000f61:   48 89 e5                mov    rbp,rsp
+   100000f64:   48 83 ec 10             sub    rsp,0x10
+   100000f68:   c7 45 fc 00 00 00 00    mov    DWORD PTR [rbp-0x4],0x0
+   100000f6f:   e8 cc ff ff ff          call   100000f40 &amp;lt;_func&amp;gt;
+   ...
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;看到最下面的 &lt;code&gt;call 100000f40&lt;/code&gt; 那行便是告訴 CPU 要到 &lt;code&gt;0x100000f40&lt;/code&gt; 的位址去抓指令（*實際上 &lt;code&gt;call&lt;/code&gt; 並非單純跳轉到其他地方去執行，它會儲存 return address 來幫助函式執行完可以回到原來的位置接下去執行*），而該位址所存的資料是 &lt;code&gt;0x554889e54883ec10&lt;/code&gt;，這些資料經過解讀後就是上面可以看到的 &lt;code&gt;push rbp&lt;/code&gt; ... 等等指令。&lt;/p&gt;
+&lt;p&gt;現在再回來看上面那個頭腦體操：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)())&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;有了上面對函式呼叫的小認識，這裡的解讀應該就會輕鬆一些了：這個 statement 把 &lt;code&gt;0&lt;/code&gt; 這個位址視作（轉型為）a pointer to a function returning void（也就是 &lt;code&gt;0&lt;/code&gt; 是 pointer 存放的位址，而在這位址上的資料是 function 的位址），接著再用 indirection operator (&lt;code&gt;*&lt;/code&gt;) 做 dereference 為 function designator 來做函式呼叫。&lt;/p&gt;
+&lt;p&gt;不過實際上上面的 statement 執行起來會是直接得到常見的 segmentation fault，這是因為 &lt;code&gt;0&lt;/code&gt; 在大多數的作業系統中是被放在保留區 (reserved) 也就是不允許存取的區域。&lt;/p&gt;
+&lt;h3&gt;Clockwise/Spiral Rule&lt;/h3&gt;
+&lt;h2&gt;Trivial Stuff&lt;/h2&gt;
+&lt;h3&gt;&lt;code&gt;func()&lt;/code&gt; v.s. &lt;code&gt;func(void)&lt;/code&gt; in C99&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// Declaration&lt;/span&gt;
+
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;func1&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;      &lt;span class="c1"&gt;// obsolescent&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;func2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;func1&lt;/code&gt; 沒有定義原型。（C99 specifies this as "function with no parameter specification". See &lt;a href="http://port70.net/~nsz/c/c99/n1256.html#6.7.5.3p16"&gt;6.7.5.3p16&lt;/a&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;func2&lt;/code&gt; 定義一個原型，這原型明確表示沒有任何 parameters。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href="https://en.wikipedia.org/wiki/Parameter_(computer_programming)#Parameters_and_arguments"&gt;parameter v.s. argument&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;parameter (formal parameter)：在函式內用來代表參數的符號。&lt;/li&gt;
+&lt;li&gt;argument (actual argument)：傳入函式中實際上的值。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;延伸閱讀&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/41803937/func-vs-funcvoid-in-c99"&gt;func() vs func(void) in c99&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;在 stackoverflow 上對這議題的討論。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/18820751/identifier-list-vs-parameter-type-list-in-c"&gt;Difference between identifier list and parameter type list&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;原來還有這種 Old Style 的宣告方式，難怪自己看白皮書的時候都不是很懂。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;va_arg (TODO)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;https://blog.csdn.net/astrotycoon/article/details/8284501&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Reference&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://bit.ly/2K1P282"&gt;程式設計師的自我修養&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="C"></category><category term="你所不知道的 C 語言"></category></entry><entry><title>[Note] 你所不知道的 C 語言：開發工具和規格標準篇</title><link href="https://naetw.github.io/posts/2018/02/06/jserv-c-course-dev-tools-and-spec-note/" rel="alternate"></link><published>2018-02-06T10:27:00+08:00</published><updated>2018-02-06T10:27:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2018-02-06:posts/2018/02/06/jserv-c-course-dev-tools-and-spec-note/</id><summary type="html">&lt;blockquote&gt;
 &lt;p&gt;最近有空開始看 C 語言講座系列的直播，這篇主要記下 Jserv 在直播中提過但是沒有細講的內容。其餘內容請參閱下方共筆連結。&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://hackmd.io/s/HJFyt37Mx"&gt;原始課程共筆連結&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
@@ -151,7 +993,7 @@
 &lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Bootstrapping_(compilers)"&gt;Bootstrapping Compiler&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="http://www.cnblogs.com/dejavu/archive/2012/09/02/2667640.html"&gt;&amp;lt;C/C++&gt; 左值和右值, L-value和R-value&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf"&gt;C99 White Paper&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</content><category term="C"></category><category term="你所不知道的 C 語言"></category></entry><entry><title>Use snipmate in vim to make life easier</title><link href="https://naetw.github.io/posts/2017/01/04/vim-snipmate-share/" rel="alternate"></link><published>2017-01-04T09:09:00+08:00</published><updated>2017-01-04T09:09:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2017-01-04:/posts/2017/01/04/vim-snipmate-share/</id><summary type="html">&lt;p&gt;A note of using snipmate in vim&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Description&lt;/h2&gt;
+&lt;/ul&gt;</summary><category term="C"></category><category term="你所不知道的 C 語言"></category></entry><entry><title>Use snipmate in vim to make life easier</title><link href="https://naetw.github.io/posts/2017/01/04/vim-snipmate-share/" rel="alternate"></link><published>2017-01-04T09:09:00+08:00</published><updated>2017-01-04T09:09:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2017-01-04:posts/2017/01/04/vim-snipmate-share/</id><summary type="html">&lt;h2&gt;Description&lt;/h2&gt;
 &lt;blockquote&gt;
 &lt;p&gt;在打 CTF 的時候，每次解 pwn 都要重複打一些基本設定覺得很麻煩很懶，後來發現了 &lt;a href="https://github.com/garbas/vim-snipmate"&gt;snipmate&lt;/a&gt; + &lt;a href="https://github.com/honza/vim-snippets"&gt;vim-snippets&lt;/a&gt; 覺得滿好用的，很適合我這種懶人&lt;/p&gt;
 &lt;/blockquote&gt;
@@ -203,7 +1045,7 @@ Plugin &amp;#39;honza/vim-snippets&amp;#39;
 &lt;/thead&gt;
 &lt;tbody&gt;
 &lt;tr&gt;
-&lt;td align="center"&gt;&lt;img alt="Demo" src="http://i.imgur.com/jyNKSc6.gif"&gt;&lt;/td&gt;
+&lt;td align="center"&gt;&lt;img alt="Demo" src="http://i.imgur.com/jyNKSc6.gif" /&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
-&lt;/table&gt;</content><category term="vim"></category></entry></feed>
+&lt;/table&gt;</summary><category term="vim"></category></entry></feed>

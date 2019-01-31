@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>  Use snipmate in vim to make life easier
+    <title>  [Note] 你所不知道的 C 語言：指標篇
  | naetw's blog</title>
 
     <meta name="author" content="Naetw"/>
@@ -85,7 +85,7 @@
       <div class="row">
         <div class=" col-md-9  ">
   <h1>
-    <a href="https://naetw.github.io/posts/2017/01/04/vim-snipmate-share/" rel="bookmark" title="Permalink to Use snipmate in vim to make life easier">Use snipmate in vim to make life easier</a>
+    <a href="https://naetw.github.io/posts/2018/07/23/jserv-c-course-pointer-note/" rel="bookmark" title="Permalink to [Note] 你所不知道的 C 語言：指標篇">[Note] 你所不知道的 C 語言：指標篇</a>
   </h1>
         </div>
       </div>
@@ -97,62 +97,109 @@
   
 
   <div>
-    <h2>Description</h2>
-<blockquote>
-<p>在打 CTF 的時候，每次解 pwn 都要重複打一些基本設定覺得很麻煩很懶，後來發現了 <a href="https://github.com/garbas/vim-snipmate">snipmate</a> + <a href="https://github.com/honza/vim-snippets">vim-snippets</a> 覺得滿好用的，很適合我這種懶人</p>
+    <blockquote>
+<p>最近有空開始看 C 語言講座系列的直播，此系列主要記下 Jserv 在直播中提過但是沒有細講或是自己有興趣的內容。其餘內容請參閱下方共筆連結。</p>
+<p><a href="https://hackmd.io/s/HyBPr9WGl">原始課程共筆連結</a></p>
 </blockquote>
-<h2>Install</h2>
-<p>個人是用 <a href="https://github.com/gmarik/vundle">Vundle</a>，其他安裝方式可以到 GitHub 上去看</p>
-<p>在 .vimrc 裡面的 <code>call vundle#begin()</code> 跟 <code>call vundle#end()</code> 之間加入以下幾行：</p>
-<div class="highlight"><pre><span></span>Plugin &#39;MarcWeber/vim-addon-mw-utils&#39;
-Plugin &#39;tomtom/tlib_vim&#39;
-Plugin &#39;garbas/vim-snipmate&#39;
-Plugin &#39;honza/vim-snippets&#39;
+<h2>Declaration 的解讀</h2>
+<h3>小小頭腦體操</h3>
+<p>取自 <a href="http://www.literateprogramming.com/ctraps.pdf">C Traps and Pitfalls</a> 的案例 "Understanding Declarations"。</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="kt">void</span><span class="p">(</span><span class="o">*</span><span class="p">)())</span> <span class="mi">0</span><span class="p">)();</span>
 </pre></div>
 
 
-<p>snipmate depends on <a href="https://github.com/marcweber/vim-addon-mw-utils">vim-addon-mw-utils</a> and <a href="https://github.com/tomtom/tlib_vim">tlib_vim</a>，所以這兩個也要一併裝起來</p>
-<p>而裝了 snipmate 後還沒有任何 snippets 可以用，所以也會裝 vim-snippets，這是 snipmate default snippets，這樣一來就可以支援各種語言</p>
-<h2>Usage</h2>
-<p>平常打 CTF 解 pwn 題基本上都需要:</p>
-<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<p>要理解上述的 statement，個人認為需要對執行程式的背後機制有些認識：</p>
+<p>首先程式（狹義上可說可執行檔）是一個靜態的概念，是由一些指令（機器碼 machine code）以及資料所組成的檔案（machine code 其實也是資料，不過會被放在被標記為可執行的區塊中），要執行程式會需要將程式載入至記憶體中，再由 CPU 去抓取指令來執行，這個抓取的動作便需要有指令所在位置的資訊。以一個簡單的程式為例：</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
 
-<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kt">void</span> <span class="nf">func</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">puts</span><span class="p">(</span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+<span class="p">}</span>
 
-<span class="n">ip</span> <span class="o">=</span> <span class="s1">&#39;127.0.0.1&#39;</span>
-<span class="n">port</span> <span class="o">=</span> <span class="mi">4000</span>
-
-<span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">func</span><span class="p">();</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 
 
-<p>每次都要打一遍雖然很快但很麻煩@@，有了 snippets 可以很快的完成</p>
-<p>只要在 <code>~/.vim/</code> 底下建一個 snippets directory，在裡面可以放不同語言的 snippets，以我的例子是建一個 <code>python.snippets</code>，在裡面加入以下幾行：</p>
-<div class="highlight"><pre><span></span><span class="n">snippets</span> <span class="n">pwn</span>
-    <span class="c1">#!/usr/bin/env python</span>
+<p>在 main 中呼叫了 <code>func()</code> 這個函式，代表著此時 CPU 要去存放 <code>func()</code> 的指令的位址來讀機器碼，在 CPU 中有個 Program Counter（又稱 Instruction Pointer）的暫存器用來記錄此時執行到哪條指令，也就是該暫存器是儲存一個位址，而該位址所存放的資料便是機器碼。</p>
+<p>可以用 <a href="https://www.gnu.org/software/binutils/">GNU Bintuils</a> 中的 <code>objdump</code> 來觀察，對可執行檔下以下指令：<code>objdump -d -M intel &lt;your executable file&gt;</code> 便可以觀察到如下資訊</p>
+<div class="highlight"><pre><span></span>$ objdump -d -M intel a.out
+...
 
-    <span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+Disassembly of section .text:
 
-    <span class="n">ip</span> <span class="o">=</span> <span class="s1">&#39;127.0.0.1&#39;</span>
-    <span class="n">port</span> <span class="o">=</span> <span class="mi">4000</span>
+0000000100000f40 &lt;_func&gt;:
+   100000f40:   55                      push   rbp
+   100000f41:   48 89 e5                mov    rbp,rsp
+   100000f44:   48 83 ec 10             sub    rsp,0x10
+   ...
 
-    <span class="n">r</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+0000000100000f60 &lt;_main&gt;:
+   100000f60:   55                      push   rbp
+   100000f61:   48 89 e5                mov    rbp,rsp
+   100000f64:   48 83 ec 10             sub    rsp,0x10
+   100000f68:   c7 45 fc 00 00 00 00    mov    DWORD PTR [rbp-0x4],0x0
+   100000f6f:   e8 cc ff ff ff          call   100000f40 &lt;_func&gt;
+   ...
 </pre></div>
 
 
-<p>這樣一來我只要輸入 pwn 之後按下 tab 就可以生出 snippets 裡面所記錄的 code</p>
-<table>
-<thead>
-<tr>
-<th align="center">Demo</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="center"><img alt="Demo" src="http://i.imgur.com/jyNKSc6.gif" /></td>
-</tr>
-</tbody>
-</table>
+<p>看到最下面的 <code>call 100000f40</code> 那行便是告訴 CPU 要到 <code>0x100000f40</code> 的位址去抓指令（*實際上 <code>call</code> 並非單純跳轉到其他地方去執行，它會儲存 return address 來幫助函式執行完可以回到原來的位置接下去執行*），而該位址所存的資料是 <code>0x554889e54883ec10</code>，這些資料經過解讀後就是上面可以看到的 <code>push rbp</code> ... 等等指令。</p>
+<p>現在再回來看上面那個頭腦體操：</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="kt">void</span><span class="p">(</span><span class="o">*</span><span class="p">)())</span> <span class="mi">0</span><span class="p">)();</span>
+</pre></div>
+
+
+<p>有了上面對函式呼叫的小認識，這裡的解讀應該就會輕鬆一些了：這個 statement 把 <code>0</code> 這個位址視作（轉型為）a pointer to a function returning void（也就是 <code>0</code> 是 pointer 存放的位址，而在這位址上的資料是 function 的位址），接著再用 indirection operator (<code>*</code>) 做 dereference 為 function designator 來做函式呼叫。</p>
+<p>不過實際上上面的 statement 執行起來會是直接得到常見的 segmentation fault，這是因為 <code>0</code> 在大多數的作業系統中是被放在保留區 (reserved) 也就是不允許存取的區域。</p>
+<h3>Clockwise/Spiral Rule</h3>
+<h2>Trivial Stuff</h2>
+<h3><code>func()</code> v.s. <code>func(void)</code> in C99</h3>
+<div class="highlight"><pre><span></span><span class="c1">// Declaration</span>
+
+<span class="kt">void</span> <span class="nf">func1</span><span class="p">();</span>      <span class="c1">// obsolescent</span>
+<span class="kt">void</span> <span class="nf">func2</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</pre></div>
+
+
+<ul>
+<li><code>func1</code> 沒有定義原型。（C99 specifies this as "function with no parameter specification". See <a href="http://port70.net/~nsz/c/c99/n1256.html#6.7.5.3p16">6.7.5.3p16</a>）</li>
+<li><code>func2</code> 定義一個原型，這原型明確表示沒有任何 parameters。</li>
+</ul>
+<blockquote>
+<p><a href="https://en.wikipedia.org/wiki/Parameter_(computer_programming)#Parameters_and_arguments">parameter v.s. argument</a></p>
+<ul>
+<li>parameter (formal parameter)：在函式內用來代表參數的符號。</li>
+<li>argument (actual argument)：傳入函式中實際上的值。</li>
+</ul>
+</blockquote>
+<ul>
+<li>
+<p>延伸閱讀</p>
+<ul>
+<li><a href="https://stackoverflow.com/questions/41803937/func-vs-funcvoid-in-c99">func() vs func(void) in c99</a><ul>
+<li>在 stackoverflow 上對這議題的討論。</li>
+</ul>
+</li>
+<li><a href="https://stackoverflow.com/questions/18820751/identifier-list-vs-parameter-type-list-in-c">Difference between identifier list and parameter type list</a><ul>
+<li>原來還有這種 Old Style 的宣告方式，難怪自己看白皮書的時候都不是很懂。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>va_arg (TODO)</p>
+<ul>
+<li>https://blog.csdn.net/astrotycoon/article/details/8284501</li>
+</ul>
+</li>
+</ul>
+<h2>Reference</h2>
+<ul>
+<li><a href="https://bit.ly/2K1P282">程式設計師的自我修養</a></li>
+</ul>
   </div>
 
 
@@ -160,9 +207,9 @@ Plugin &#39;honza/vim-snippets&#39;
       <div id="disqus_thread"></div>
       <script type="text/javascript">
         var disqus_shortname = 'naetw-github-io';
-        var disqus_identifier = "posts/2017/01/04/vim-snipmate-share/";
-        var disqus_title = "Use snipmate in vim to make life easier";
-        var disqus_url = "https://naetw.github.io/posts/2017/01/04/vim-snipmate-share/";
+        var disqus_identifier = "posts/2018/07/23/jserv-c-course-pointer-note/";
+        var disqus_title = "[Note] 你所不知道的 C 語言：指標篇";
+        var disqus_url = "https://naetw.github.io/posts/2018/07/23/jserv-c-course-pointer-note/";
         (function() {
           var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
           dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
@@ -177,7 +224,7 @@ Plugin &#39;honza/vim-snippets&#39;
           <div class="col-md-3">
   <div class="well">
 
-    <p><abbr title="2017-01-04T09:09:00+08:00"><i class="fa fa-calendar"></i> Wed 04 January 2017</abbr></p>
+    <p><abbr title="2018-07-23T13:56:00+08:00"><i class="fa fa-calendar"></i> Mon 23 July 2018</abbr></p>
 
       <p><address>
         <i class="fa fa-user"></i> By
@@ -190,9 +237,12 @@ Plugin &#39;honza/vim-snippets&#39;
               <a href="https://naetw.github.io/category/note/" rel="tag"
                   data-toggle="tooltip" class="label label-info"
                   title="5 articles in this category">note</a>
-            <a href="/tag/vim/" data-toggle="tooltip"
+            <a href="/tag/c/" data-toggle="tooltip"
       class="label label-default"
-      title="1 article with this tag">vim</a>
+      title="3 articles with this tag">C</a>
+            <a href="/tag/ni-suo-bu-zhi-dao-de-c-yu-yan/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">你所不知道的 C 語言</a>
       </p>
       <hr/>
 

@@ -103,7 +103,7 @@
 </blockquote>
 <p>程式小小的，比較少見的部分是 <code>alloca</code> 的部分，不同於平常的 <code>malloc</code>，<code>alloca</code> 是從 caller 的 stack frame 上分配記憶體，在 function call 結束時，回收記憶體。</p>
 <p>main:</p>
-<p><img alt="main" src="http://i.imgur.com/HVWlCzl.png"></p>
+<p><img alt="main" src="http://i.imgur.com/HVWlCzl.png" /></p>
 <p>因為 <code>alloca</code>，main 裡有一行指令是 <code>sub esp, eax</code>，這個 eax 的值會是根據輸入的 message length 並做一些處理，所以想法是讓 eax 為負數，<code>sub esp, eax</code> 指令做完後，esp 的 address 高於 ebp，這樣在 call message 時，<strong>因為 message function 的 stack frame 跟 main 的 stack frame 重疊</strong>，就可以用 overflow 來 overwrite return address。</p>
 <p>來看一下 stack frame 的變化:</p>
 <div class="highlight"><pre><span></span>         <span class="o">+------------------+</span> low address
@@ -139,7 +139,7 @@ new      <span class="o">|</span><span class="m">...............</span><span cla
 
 
 <p>message:</p>
-<p><img alt="message" src="http://i.imgur.com/W7cpuzP.png"></p>
+<p><img alt="message" src="http://i.imgur.com/W7cpuzP.png" /></p>
 <p>雖然因為輸入的 length 是負數，第一個 <code>getnline</code> 無法輸入，但是主要利用的是 <strong>stack frame 的重疊</strong>，所以要寫入的地方就著重在 local variable <code>v3</code> 上</p>
 <h2>Exploit</h2>
 <p>找到漏洞後，我們已經能利用 overwrite ret address 來控制 eip，不過我們還差 libc information</p>
@@ -283,7 +283,7 @@ new      <span class="o">|</span><span class="m">...............</span><span cla
 
           <div class="col-md-2 text-muted">
             <h5>Copyright notice</h5>
-            <p>© Copyright 2016-2018 Naetw.</p>
+            <p>© Copyright 2016-2019 Naetw.</p>
           </div>
 
           <div class="col-md-2 text-muted">
