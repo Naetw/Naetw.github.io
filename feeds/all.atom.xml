@@ -1,5 +1,311 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>naetw's blog</title><link href="https://naetw.github.io/" rel="alternate"></link><link href="https://naetw.github.io/feeds/all.atom.xml" rel="self"></link><id>https://naetw.github.io/</id><updated>2019-01-31T09:51:00+08:00</updated><entry><title>[note] Modern Microprocessors in 90-minute guide</title><link href="https://naetw.github.io/posts/2019/01/31/modern-microprocessors-in-90-minute-guide/" rel="alternate"></link><published>2019-01-31T09:51:00+08:00</published><updated>2019-01-31T09:51:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2019-01-31:posts/2019/01/31/modern-microprocessors-in-90-minute-guide/</id><summary type="html">&lt;blockquote&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>naetw's blog</title><link href="https://naetw.github.io/" rel="alternate"></link><link href="https://naetw.github.io/feeds/all.atom.xml" rel="self"></link><id>https://naetw.github.io/</id><updated>2019-02-13T13:56:00+08:00</updated><entry><title>[Note] 你所不知道的 C 語言：指標篇</title><link href="https://naetw.github.io/posts/2019/02/13/jserv-c-course-pointer-note/" rel="alternate"></link><published>2019-02-13T13:56:00+08:00</published><updated>2019-02-13T13:56:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2019-02-13:posts/2019/02/13/jserv-c-course-pointer-note/</id><summary type="html">&lt;blockquote&gt;
+&lt;p&gt;最近有空開始看 C 語言講座系列的直播，此系列主要記下 Jserv 在直播中提過但是沒有細講或是自己有興趣的內容。其餘內容請參閱下方共筆連結。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://hackmd.io/s/HyBPr9WGl"&gt;原始課程共筆連結&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h1&gt;Declaration 的解讀&lt;/h1&gt;
+&lt;h2&gt;小小頭腦體操&lt;/h2&gt;
+&lt;p&gt;取自 &lt;a href="http://www.literateprogramming.com/ctraps.pdf"&gt;C Traps and Pitfalls&lt;/a&gt; 的案例 "Understanding Declarations"。&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)())&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;要理解上述的 statement，個人認為需要對執行程式的背後機制有個簡單的認識：&lt;/p&gt;
+&lt;p&gt;首先程式（狹義上可說可執行檔）是一個靜態的概念，是由一些指令（機器碼 machine code）以及資料所組成的檔案（machine code 其實也是資料，不過會被放在被標記為可執行的區塊中），要執行程式會需要將程式載入至記憶體中，再由 CPU 去抓取指令來執行，這個抓取的動作便需要有指令所在位置的資訊。以一個簡單的程式為例：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;puts&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Hello World&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;func&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在 main 中呼叫了 &lt;code&gt;func()&lt;/code&gt; 這個函式，代表著此時 CPU 要去存放 &lt;code&gt;func()&lt;/code&gt; 的指令的位址來讀機器碼，在 CPU 中有個 Program Counter（又稱 Instruction Pointer）的暫存器用來記錄此時執行到哪條指令，也就是該暫存器是儲存一個位址，而該位址所存放的資料便是機器碼。&lt;/p&gt;
+&lt;p&gt;可以用 &lt;a href="https://www.gnu.org/software/binutils/"&gt;GNU Bintuils&lt;/a&gt; 中的 &lt;code&gt;objdump&lt;/code&gt; 來觀察，對可執行檔下以下指令：&lt;code&gt;objdump -d -M intel &amp;lt;your executable file&amp;gt;&lt;/code&gt; 便可以觀察到如下資訊&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ objdump -d -M intel a.out
+...
+
+Disassembly of section .text:
+
+0000000100000f40 &amp;lt;_func&amp;gt;:
+   100000f40:   55                      push   rbp
+   100000f41:   48 89 e5                mov    rbp,rsp
+   100000f44:   48 83 ec 10             sub    rsp,0x10
+   ...
+
+0000000100000f60 &amp;lt;_main&amp;gt;:
+   100000f60:   55                      push   rbp
+   100000f61:   48 89 e5                mov    rbp,rsp
+   100000f64:   48 83 ec 10             sub    rsp,0x10
+   100000f68:   c7 45 fc 00 00 00 00    mov    DWORD PTR [rbp-0x4],0x0
+   100000f6f:   e8 cc ff ff ff          call   100000f40 &amp;lt;_func&amp;gt;
+   ...
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;看到最下面的 &lt;code&gt;call 100000f40&lt;/code&gt; 那行便是告訴 CPU 要到 &lt;code&gt;0x100000f40&lt;/code&gt; 的位址去抓指令（*實際上 &lt;code&gt;call&lt;/code&gt; 並非單純跳轉到其他地方去執行，它會儲存 return address 來幫助函式執行完可以回到原來的位置接下去執行*），而該位址所存的資料是 &lt;code&gt;0x554889e54883ec10&lt;/code&gt;，這些資料經過解讀後就是上面可以看到的 &lt;code&gt;push rbp&lt;/code&gt; ... 等等指令。&lt;/p&gt;
+&lt;p&gt;現在再回來看上面那個頭腦體操：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)())&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;有了上面對函式呼叫的小認識，這裡的解讀應該就會輕鬆一些了：這個陳述式（statement）把 &lt;code&gt;0&lt;/code&gt; 這個位址視作（轉型為）a pointer to a function returning void（也就是 &lt;code&gt;0&lt;/code&gt; 是指標物件本身的位址，而在這位址上的資料是函式的位址），接著再用 indirection operator (&lt;code&gt;*&lt;/code&gt;) 將它 dereference 為 function designator 來做函式呼叫。呼叫後會得到常見的 segmentation fault，這是因為 &lt;code&gt;0&lt;/code&gt; 在大多數的作業系統中是被放在保留區 (reserved) 也就是不允許存取的區域。&lt;/p&gt;
+&lt;p&gt;實際上根據規格書，代表函式呼叫的運算式（expression）通常都是由 function designator 轉換而來 [1]，型別是 “pointer to a function returning type”，因此上面使用 &lt;code&gt;*&lt;/code&gt; 基本上是沒有意義的，因為它將 a pointer to a function returning void 轉換成 a function returning void，但是在最後又會被轉換成 a pointer to a function returning void [2]。&lt;/p&gt;
+&lt;p&gt;[1]: C11 &lt;a href="http://port70.net/~nsz/c/c11/n1570.html#6.5.2.2"&gt;6.5.2.2&lt;/a&gt; p1&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The expression that denotes the called function (Most often, this is the result of converting an identifier that is a function designator.) shall have type pointer to function returning void or returning a complete object type other than an array type.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;[2]: C11 &lt;a href="http://port70.net/~nsz/c/c11/n1570.html#6.3.2.1"&gt;6.3.2.1&lt;/a&gt; p4&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A function designator is an expression that has function type. Except when it is the operand of the sizeof operator, the _Alignof operator, or the unary &amp;amp; operator, a function designator with type ''function returning type'' is converted to an expression that has type ''pointer to function returning type''.&lt;/li&gt;
+&lt;li&gt;除了作為 &lt;code&gt;sizeof&lt;/code&gt;, &lt;code&gt;_Alignof&lt;/code&gt;, &lt;code&gt;&amp;amp;&lt;/code&gt; 的運算元&lt;strong&gt;以外&lt;/strong&gt;，function designator 都會被轉換成 “pointer to function returning type”&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;用一個極端的例子來看：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;aaa&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fptr&lt;/span&gt;&lt;span class="p"&gt;)()&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;func&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;**********&lt;/span&gt;&lt;span class="n"&gt;fptr&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;     &lt;span class="c1"&gt;// equivalent to fptr();&lt;/span&gt;
+    &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;**********&lt;/span&gt;&lt;span class="n"&gt;func&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;     &lt;span class="c1"&gt;// equivalent to func();&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;最接近識別字（identifier）的 &lt;code&gt;*&lt;/code&gt; 會將該識別字轉換成 function designator，但是透過上面的 [2] 它又會被轉換成 “pointer to function returning type”，第二個 &lt;code&gt;*&lt;/code&gt; 又會轉換成 function designator … 以此類推，因此基本上不管放多少個 &lt;code&gt;*&lt;/code&gt; 運算子，最終被解讀的型別仍舊會是 “pointer to function returning type”。&lt;/p&gt;
+&lt;h2&gt;Clockwise/Spiral Rule&lt;/h2&gt;
+&lt;p&gt;函式 / 變數的宣告百百種，這裡介紹一個讓程式設計師可以人工分析 C 的宣告的規則。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href="http://c-faq.com/decl/spiral.anderson.html"&gt;The ``Clockwise/Spiral Rule'’&lt;/a&gt; 的筆記&lt;/p&gt;
+&lt;p&gt;Copyright © 1993,1994 David Anderson
+This article may be freely distributed as long as the author's name and this notice are retained.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;三個步驟：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;從想知道的元素開始（變數名稱、函式名稱），以順時針方向開始解讀，每遇到一個新的元素就加入該元素的描述。&lt;ol&gt;
+&lt;li&gt;[X] or [] =&amp;gt; Array X size of … or Array undefined size of&lt;/li&gt;
+&lt;li&gt;(type1, type2) =&amp;gt; function passing type1 and type2 returning …&lt;/li&gt;
+&lt;li&gt;* =&amp;gt; pointer to …&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;持續以順時針方向做 1. 的動作，直到所有語彙單位（tokens）都被解讀完畢&lt;/li&gt;
+&lt;li&gt;括號（parenthesis）內的優先解讀&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;範例 1&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;想知道 &lt;code&gt;str&lt;/code&gt; 是什麼，於是從它開始：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;      &lt;span class="n"&gt;str&lt;/span&gt;
+      &lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;   &lt;span class="c1"&gt;// str is an array 10 of ...&lt;/span&gt;
+     &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;        &lt;span class="c1"&gt;// str is an array 10 of pointers to ...&lt;/span&gt;
+&lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;   &lt;span class="c1"&gt;// str is an array 10 of pointers to char&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;範例 2&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;signal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fp&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)))(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;想知道 signal 是什麼：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;       &lt;span class="n"&gt;signal&lt;/span&gt;
+       &lt;span class="nf"&gt;signal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;...&lt;/span&gt;                      &lt;span class="c1"&gt;// signal is a function passing &lt;/span&gt;
+                                            &lt;span class="c1"&gt;// an int and a ...&lt;/span&gt;
+                        &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fp&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;               &lt;span class="c1"&gt;// fp is a pointer to ...&lt;/span&gt;
+                        &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fp&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;          &lt;span class="c1"&gt;// fp is a pointer to a function&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// passing an int returning ...&lt;/span&gt;
+                   &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fp&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;          &lt;span class="c1"&gt;// fp is a pointer to a function&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// passing an int returning void&lt;/span&gt;
+       &lt;span class="n"&gt;signal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fp&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;         &lt;span class="c1"&gt;// signal is a function passing &lt;/span&gt;
+                                            &lt;span class="c1"&gt;// an int and a pointer to&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// a function passing an int&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning void returning ...&lt;/span&gt;
+      &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;signal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fp&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;         &lt;span class="c1"&gt;// signal is a function passing &lt;/span&gt;
+                                            &lt;span class="c1"&gt;// an int and a pointer to&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// a function passing an int&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning void&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning a pointer to ...&lt;/span&gt;
+      &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;signal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fp&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;         &lt;span class="c1"&gt;// signal is a function passing &lt;/span&gt;
+                                            &lt;span class="c1"&gt;// an int and a pointer to&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// a function passing an int&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning void&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning a pointer to ...&lt;/span&gt;
+      &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;signal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fp&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;))(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;   &lt;span class="c1"&gt;// signal is a function passing &lt;/span&gt;
+                                            &lt;span class="c1"&gt;// an int and a pointer to&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// a function passing an int&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning void&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning a pointer to a&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// function passing an int&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning ...&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;signal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;fp&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)))(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;  &lt;span class="c1"&gt;// signal is a function passing &lt;/span&gt;
+                                            &lt;span class="c1"&gt;// an int and a pointer to&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// a function passing an int&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning void&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning a pointer to a&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// function passing an int&lt;/span&gt;
+                                            &lt;span class="c1"&gt;// returning void&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;首先碰到左括號，知道它是個函式，並嘗試解讀括號內的東西&lt;ul&gt;
+&lt;li&gt;signal is a function passing an int and a …&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;碰到了另一個想理解的識別符（identifier）fp，於是像是遞迴函式先行解讀。先碰到右括號，先把括號內的東西解讀，遇到了 &lt;code&gt;*&lt;/code&gt;&lt;ul&gt;
+&lt;li&gt;fp is a pointer to …&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;接著是左括號&lt;ul&gt;
+&lt;li&gt;fp is a pointer to a function passing an int returning …&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;接著是 &lt;code&gt;void&lt;/code&gt;&lt;ul&gt;
+&lt;li&gt;fp is a pointer to a function passing an int returning nothin (void)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;完成了 fp 的解讀，回到 signal 的解讀，將目前有的資訊結合&lt;ul&gt;
+&lt;li&gt;signal is a function passing an int and a pointer to a function passing an int returning nothing (void) returning …&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;接著是 &lt;code&gt;*&lt;/code&gt;&lt;ul&gt;
+&lt;li&gt;signal is a function passing an int and a pointer to a function passing an int returning nothing (void) returning a pointer to …&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;接著是左括號&lt;ul&gt;
+&lt;li&gt;signal is a function passing an int and a pointer to a function passing an int returning nothing (void) returning a pointer to a function passing an int returning …&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;最後是 &lt;code&gt;void&lt;/code&gt;&lt;ul&gt;
+&lt;li&gt;signal is a function passing an int and a pointer to a function passing an int returning nothing (void) returning a pointer to a function passing an int returning nothing (void)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Compound Literals&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;源自 stack overflow 上&lt;a href="https://stackoverflow.com/questions/14105645/is-it-possible-to-create-an-anonymous-initializer-in-c99/14105698#14105698"&gt;這篇&lt;/a&gt;，覺得挺有趣的，自己也沒用過 compound literals，紀錄一下。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;大意是有人想用 C 讓 struct 做到像是 class 繼承那樣的效果，而他想到利用建構函式的參數來控制回傳的 struct 是哪一個（裡面有 a, b, c 三種）。這種選擇很簡單，使用 enum 就可以做到，問題是不同的 struct 裡面的資料結構不太一樣，他想要用一種 “anonymous variable” 來建構適當的 struct。&lt;/p&gt;
+&lt;p&gt;回答中提到了 compound literals，它是個 &lt;a href="https://en.wikipedia.org/wiki/C99#Design"&gt;C99 引進的特性&lt;/a&gt;，我們能夠利用 initializer list 來製造一個無名物件（物件代表有專屬空間來存放資料），這個 compound literal 的結果為 lvalue [1]，也就是該物件的空間位址。由 casting + initializer list 組成，語法為：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;(complete object type / array of unknown size){ initializer list }
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;也就是說我們可以做到像這樣的事情：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;drawline&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;point&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt; &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt; &lt;span class="p"&gt;},&lt;/span&gt;
+         &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;point&lt;/span&gt;&lt;span class="p"&gt;){&lt;/span&gt; &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;4&lt;/span&gt; &lt;span class="p"&gt;});&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;[1]: C11 &lt;a href="http://port70.net/~nsz/c/c11/n1570.html#6.5.2.5"&gt;6.5.2.5&lt;/a&gt; p4&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;If the type name specifies an array of unknown size, the size is determined by the initializer list as specified in &lt;a href="http://port70.net/~nsz/c/c11/n1570.html#6.7.9"&gt;6.7.9&lt;/a&gt;, and the type of the compound literal is that of the completed array type. Otherwise (when the type name specifies an object type), the type of the compound literal is that specified by the type name. In either case, the result is an lvalue.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Flexible Array Members&lt;/h2&gt;
+&lt;p&gt;同樣也是 &lt;a href="https://en.wikipedia.org/wiki/C99#Design"&gt;C99 引進的特性&lt;/a&gt;。在介紹以前，假設有個情境是需要紀錄會員名字的結構，最簡單的方法可能是：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;User&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kt"&gt;uint32_t&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;但並非每個人都會剛好用滿 20 個字元，會造成浪費，於是第二種方法出現：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;User&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kt"&gt;uint32_t&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;但是這樣會需要多一次 &lt;code&gt;malloc&lt;/code&gt; 呼叫，且記憶體分佈可能會有破碎的情形。&lt;/p&gt;
+&lt;p&gt;Flexible array members 這個新特性可以一次解決上述兩種方法的缺點，它具有以下限制：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;在 &lt;code&gt;struct&lt;/code&gt; 內宣告一個 incomplete array type (e.g., &lt;code&gt;char name[]&lt;/code&gt;，size of name is flexible)。&lt;/li&gt;
+&lt;li&gt;這個成員（flexible array member）必須要放在最後。&lt;/li&gt;
+&lt;li&gt;除了 flexible array member 外，&lt;code&gt;struct&lt;/code&gt; 必須擁有至少一個成員。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;以上面的問題來舉例 flexible array member 常見用法：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;40&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
+&lt;span class="kt"&gt;ssize_t&lt;/span&gt; &lt;span class="n"&gt;len&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;User&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="n"&gt;len&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;read&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;input&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;40&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// assume that this read() succeeds&lt;/span&gt;
+&lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;User&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="n"&gt;malloc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;sizeof&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;User&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;len&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="c1"&gt;// ...&lt;/span&gt;
+&lt;span class="n"&gt;free&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;在這情況下，上面的 &lt;code&gt;p&lt;/code&gt; 相當於宣告為（在某些情況下，這個等效關係會不成立，詳見下方設計問題）：&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;User&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="kt"&gt;uint32_t&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;len&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;如此一來，避免了分配額外空間外也防止了記憶體破碎的問題。&lt;/p&gt;
+&lt;h3&gt;設計問題（以 C11 為準）&lt;/h3&gt;
+&lt;p&gt;首先看一個有趣的問題，擁有 flexible array member 的 &lt;code&gt;struct&lt;/code&gt; 的大小會是多少？&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;User&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="kt"&gt;uint32_t&lt;/span&gt; &lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;name&lt;/span&gt;&lt;span class="p"&gt;[];&lt;/span&gt;
+&lt;span class="p"&gt;};&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;根據 C11 規格書，&lt;code&gt;struct&lt;/code&gt; 的大小計算是&lt;strong&gt;將 flexible array member 視為不存在&lt;/strong&gt;，不過有個例外是：根據其他成員組成，編譯器可能會做 padding，而這個 padding 是*&lt;strong&gt;能夠&lt;/strong&gt;*跟 flexible array member 的空間重疊的。也就是說 &lt;code&gt;sizeof(User) &amp;gt;= offsetof(struct User, name)&lt;/code&gt;，且上面提到的等效宣告也就可能會失效（兩種方式中 &lt;code&gt;name&lt;/code&gt; 在 &lt;code&gt;struct&lt;/code&gt; 中的 offset 可能會不同）。因此在存取 flexible array member 時注意不能夠直接使用 &lt;code&gt;sizeof&lt;/code&gt;，需十分注意。&lt;/p&gt;
+&lt;p&gt;延伸閱讀&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;由於其他的限制，flexible array member 有些不合理的未定義行為，詳情可見相關&lt;a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2159.pdf"&gt;缺陷報告（Defeat Report）&lt;/a&gt;，內容十分詳盡！&lt;/li&gt;
+&lt;li&gt;在 C99 引進此特性以前，可以用小技巧（array of length 1）來做到類似的事情，某些編譯器可以支援 array of length 0，可參考 &lt;a href="https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html"&gt;gcc 的介紹&lt;/a&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Trivial Stuff&lt;/h2&gt;
+&lt;h3&gt;&lt;code&gt;func()&lt;/code&gt; v.s. &lt;code&gt;func(void)&lt;/code&gt; in C11&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;// Declaration&lt;/span&gt;
+
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;func1&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;      &lt;span class="c1"&gt;// obsolescent&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;func2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;func1&lt;/code&gt; 沒有定義原型。（C11 specifies this as "function with no parameter specification". See &lt;a href="http://port70.net/~nsz/c/c11/n1570.html#6.7.6.3p16"&gt;6.7.6.3 p16&lt;/a&gt;）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;func2&lt;/code&gt; 定義一個原型，這原型明確表示沒有任何 parameters。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href="https://en.wikipedia.org/wiki/Parameter_(computer_programming)#Parameters_and_arguments"&gt;parameter v.s. argument&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;parameter (formal parameter)：在函式內用來代表參數的符號。&lt;/li&gt;
+&lt;li&gt;argument (actual argument)：傳入函式中實際上的值。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;延伸閱讀&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/41803937/func-vs-funcvoid-in-c99"&gt;func() vs func(void) in c99&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;在 stackoverflow 上對這議題的討論。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/18820751/identifier-list-vs-parameter-type-list-in-c"&gt;Difference between identifier list and parameter type list&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;K&amp;amp;R-style 的宣告方式。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Reference&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://bit.ly/2K1P282"&gt;程式設計師的自我修養&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://port70.net/~nsz/c/c11/n1570.html#Contents"&gt;C11 規格書&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Flexible_array_member#cite_note-3"&gt;Wiki of Flexible array number&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://stackoverflow.com/questions/29336835/is-the-offset-of-a-flexible-array-member-subject-to-change"&gt;Is the offset of a flexible array member subject to change&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</summary><category term="C"></category><category term="你所不知道的 C 語言"></category></entry><entry><title>[note] Modern Microprocessors in 90-minute guide</title><link href="https://naetw.github.io/posts/2019/01/31/modern-microprocessors-in-90-minute-guide/" rel="alternate"></link><published>2019-01-31T09:51:00+08:00</published><updated>2019-01-31T09:51:00+08:00</updated><author><name>Naetw</name></author><id>tag:naetw.github.io,2019-01-31:posts/2019/01/31/modern-microprocessors-in-90-minute-guide/</id><summary type="html">&lt;blockquote&gt;
 &lt;p&gt;&lt;a href="http://www.lighterra.com/papers/modernmicroprocessors/"&gt;Modern Microprocessors in 90-minute guide&lt;/a&gt; 筆記&lt;/p&gt;
 &lt;p&gt;圖與表格皆來自原文&lt;/p&gt;
 &lt;/blockquote&gt;
@@ -504,7 +810,7 @@ cmovle d, b     ; if le, then b = d
 &lt;ul&gt;
 &lt;li&gt;Object in C - 一種資料表示法&lt;ul&gt;
 &lt;li&gt;原文：region of data storage in the execution environment, the contents of which can represent values&lt;/li&gt;
-&lt;li&gt;在執行期間資料儲存的區域，可以表示數值的內容&lt;/li&gt;
+&lt;li&gt;在執行期間資料儲存的區域，其內容可以用來表示數值&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;

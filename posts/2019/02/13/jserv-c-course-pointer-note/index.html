@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>  [Note] 你所不知道的 C 語言：指標篇
+ | naetw's blog</title>
+
+    <meta name="author" content="Naetw"/>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/magnific-popup.min.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/jquery.mglass.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/pygment-darkly.css"/>
+    <link rel="stylesheet" href="https://naetw.github.io/theme/css/style.css"/>
+
+    <!-- Fonts -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Istok+Web' rel='stylesheet' type='text/css'/>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'/>
+
+
+    <link rel="icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://naetw.github.io/favicon.ico" type="image/x-icon">
+
+    <!-- Feeds -->
+      <link href="https://naetw.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - All posts - Atom Feed"/>
+      <link href="https://naetw.github.io/feeds/note.atom.xml" type="application/atom+xml" rel="alternate" title="naetw&#39;s blog - Category: note - Atom Feed"/>
+
+
+  </head>
+
+  <body>
+
+    <div class="container">
+
+      <div class="page-header">
+        <h1><a href="https://naetw.github.io">naetw's blog</a> <small></small></h1>
+      </div>
+
+      <nav class="navbar navbar-default">
+
+        <!-- Hamburger menu for mobile -->
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#plumage-navbar-collapse-1" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="https://naetw.github.io" title="">naetw's blog</a>
+        </div>
+
+        <!-- Menus and search forms -->
+        <div class="collapse navbar-collapse" id="plumage-navbar-collapse-1">
+
+          <ul class="nav navbar-nav">
+<li >
+                <a href="/archives">Archives</a>
+              </li>
+<li >
+                <a href="/categories">Categories</a>
+              </li>
+<li >
+                <a href="/tags">Tags</a>
+              </li>
+          </ul>
+
+
+
+        </div>
+
+      </nav>
+
+    </div>
+
+
+    <div class="container main">
+
+
+      <div class="row">
+        <div class=" col-md-9  ">
+  <h1>
+    <a href="https://naetw.github.io/posts/2019/02/13/jserv-c-course-pointer-note/" rel="bookmark" title="Permalink to [Note] 你所不知道的 C 語言：指標篇">[Note] 你所不知道的 C 語言：指標篇</a>
+  </h1>
+        </div>
+      </div>
+
+      <div class="row">
+
+
+        <div class=" col-md-9 " id="content" role="main">
+  
+
+  <div>
+    <blockquote>
+<p>最近有空開始看 C 語言講座系列的直播，此系列主要記下 Jserv 在直播中提過但是沒有細講或是自己有興趣的內容。其餘內容請參閱下方共筆連結。</p>
+<p><a href="https://hackmd.io/s/HyBPr9WGl">原始課程共筆連結</a></p>
+</blockquote>
+<h1>Declaration 的解讀</h1>
+<h2>小小頭腦體操</h2>
+<p>取自 <a href="http://www.literateprogramming.com/ctraps.pdf">C Traps and Pitfalls</a> 的案例 "Understanding Declarations"。</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="kt">void</span><span class="p">(</span><span class="o">*</span><span class="p">)())</span> <span class="mi">0</span><span class="p">)();</span>
+</pre></div>
+
+
+<p>要理解上述的 statement，個人認為需要對執行程式的背後機制有個簡單的認識：</p>
+<p>首先程式（狹義上可說可執行檔）是一個靜態的概念，是由一些指令（機器碼 machine code）以及資料所組成的檔案（machine code 其實也是資料，不過會被放在被標記為可執行的區塊中），要執行程式會需要將程式載入至記憶體中，再由 CPU 去抓取指令來執行，這個抓取的動作便需要有指令所在位置的資訊。以一個簡單的程式為例：</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span> <span class="nf">func</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">puts</span><span class="p">(</span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">func</span><span class="p">();</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>在 main 中呼叫了 <code>func()</code> 這個函式，代表著此時 CPU 要去存放 <code>func()</code> 的指令的位址來讀機器碼，在 CPU 中有個 Program Counter（又稱 Instruction Pointer）的暫存器用來記錄此時執行到哪條指令，也就是該暫存器是儲存一個位址，而該位址所存放的資料便是機器碼。</p>
+<p>可以用 <a href="https://www.gnu.org/software/binutils/">GNU Bintuils</a> 中的 <code>objdump</code> 來觀察，對可執行檔下以下指令：<code>objdump -d -M intel &lt;your executable file&gt;</code> 便可以觀察到如下資訊</p>
+<div class="highlight"><pre><span></span>$ objdump -d -M intel a.out
+...
+
+Disassembly of section .text:
+
+0000000100000f40 &lt;_func&gt;:
+   100000f40:   55                      push   rbp
+   100000f41:   48 89 e5                mov    rbp,rsp
+   100000f44:   48 83 ec 10             sub    rsp,0x10
+   ...
+
+0000000100000f60 &lt;_main&gt;:
+   100000f60:   55                      push   rbp
+   100000f61:   48 89 e5                mov    rbp,rsp
+   100000f64:   48 83 ec 10             sub    rsp,0x10
+   100000f68:   c7 45 fc 00 00 00 00    mov    DWORD PTR [rbp-0x4],0x0
+   100000f6f:   e8 cc ff ff ff          call   100000f40 &lt;_func&gt;
+   ...
+</pre></div>
+
+
+<p>看到最下面的 <code>call 100000f40</code> 那行便是告訴 CPU 要到 <code>0x100000f40</code> 的位址去抓指令（*實際上 <code>call</code> 並非單純跳轉到其他地方去執行，它會儲存 return address 來幫助函式執行完可以回到原來的位置接下去執行*），而該位址所存的資料是 <code>0x554889e54883ec10</code>，這些資料經過解讀後就是上面可以看到的 <code>push rbp</code> ... 等等指令。</p>
+<p>現在再回來看上面那個頭腦體操：</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="kt">void</span><span class="p">(</span><span class="o">*</span><span class="p">)())</span> <span class="mi">0</span><span class="p">)();</span>
+</pre></div>
+
+
+<p>有了上面對函式呼叫的小認識，這裡的解讀應該就會輕鬆一些了：這個陳述式（statement）把 <code>0</code> 這個位址視作（轉型為）a pointer to a function returning void（也就是 <code>0</code> 是指標物件本身的位址，而在這位址上的資料是函式的位址），接著再用 indirection operator (<code>*</code>) 將它 dereference 為 function designator 來做函式呼叫。呼叫後會得到常見的 segmentation fault，這是因為 <code>0</code> 在大多數的作業系統中是被放在保留區 (reserved) 也就是不允許存取的區域。</p>
+<p>實際上根據規格書，代表函式呼叫的運算式（expression）通常都是由 function designator 轉換而來 [1]，型別是 “pointer to a function returning type”，因此上面使用 <code>*</code> 基本上是沒有意義的，因為它將 a pointer to a function returning void 轉換成 a function returning void，但是在最後又會被轉換成 a pointer to a function returning void [2]。</p>
+<p>[1]: C11 <a href="http://port70.net/~nsz/c/c11/n1570.html#6.5.2.2">6.5.2.2</a> p1</p>
+<ul>
+<li>The expression that denotes the called function (Most often, this is the result of converting an identifier that is a function designator.) shall have type pointer to function returning void or returning a complete object type other than an array type.</li>
+</ul>
+<p>[2]: C11 <a href="http://port70.net/~nsz/c/c11/n1570.html#6.3.2.1">6.3.2.1</a> p4</p>
+<ul>
+<li>A function designator is an expression that has function type. Except when it is the operand of the sizeof operator, the _Alignof operator, or the unary &amp; operator, a function designator with type ''function returning type'' is converted to an expression that has type ''pointer to function returning type''.</li>
+<li>除了作為 <code>sizeof</code>, <code>_Alignof</code>, <code>&amp;</code> 的運算元<strong>以外</strong>，function designator 都會被轉換成 “pointer to function returning type”</li>
+</ul>
+<p>用一個極端的例子來看：</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="kt">void</span> <span class="nf">func</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;aaa</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">fptr</span><span class="p">)()</span> <span class="o">=</span> <span class="n">func</span><span class="p">;</span>
+    <span class="p">(</span><span class="o">**********</span><span class="n">fptr</span><span class="p">)();</span>     <span class="c1">// equivalent to fptr();</span>
+    <span class="p">(</span><span class="o">**********</span><span class="n">func</span><span class="p">)();</span>     <span class="c1">// equivalent to func();</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>最接近識別字（identifier）的 <code>*</code> 會將該識別字轉換成 function designator，但是透過上面的 [2] 它又會被轉換成 “pointer to function returning type”，第二個 <code>*</code> 又會轉換成 function designator … 以此類推，因此基本上不管放多少個 <code>*</code> 運算子，最終被解讀的型別仍舊會是 “pointer to function returning type”。</p>
+<h2>Clockwise/Spiral Rule</h2>
+<p>函式 / 變數的宣告百百種，這裡介紹一個讓程式設計師可以人工分析 C 的宣告的規則。</p>
+<blockquote>
+<p><a href="http://c-faq.com/decl/spiral.anderson.html">The ``Clockwise/Spiral Rule'’</a> 的筆記</p>
+<p>Copyright © 1993,1994 David Anderson
+This article may be freely distributed as long as the author's name and this notice are retained.</p>
+</blockquote>
+<p>三個步驟：</p>
+<ol>
+<li>從想知道的元素開始（變數名稱、函式名稱），以順時針方向開始解讀，每遇到一個新的元素就加入該元素的描述。<ol>
+<li>[X] or [] =&gt; Array X size of … or Array undefined size of</li>
+<li>(type1, type2) =&gt; function passing type1 and type2 returning …</li>
+<li>* =&gt; pointer to …</li>
+</ol>
+</li>
+<li>持續以順時針方向做 1. 的動作，直到所有語彙單位（tokens）都被解讀完畢</li>
+<li>括號（parenthesis）內的優先解讀</li>
+</ol>
+<p>範例 1</p>
+<div class="highlight"><pre><span></span><span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+</pre></div>
+
+
+<p>想知道 <code>str</code> 是什麼，於是從它開始：</p>
+<div class="highlight"><pre><span></span>      <span class="n">str</span>
+      <span class="n">str</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>   <span class="c1">// str is an array 10 of ...</span>
+     <span class="o">*</span><span class="n">str</span>        <span class="c1">// str is an array 10 of pointers to ...</span>
+<span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>   <span class="c1">// str is an array 10 of pointers to char</span>
+</pre></div>
+
+
+<p>範例 2</p>
+<div class="highlight"><pre><span></span><span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">signal</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)(</span><span class="kt">int</span><span class="p">)))(</span><span class="kt">int</span><span class="p">);</span>
+</pre></div>
+
+
+<p>想知道 signal 是什麼：</p>
+<div class="highlight"><pre><span></span>       <span class="n">signal</span>
+       <span class="nf">signal</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="p">...</span>                      <span class="c1">// signal is a function passing </span>
+                                            <span class="c1">// an int and a ...</span>
+                        <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)</span>               <span class="c1">// fp is a pointer to ...</span>
+                        <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)(</span><span class="kt">int</span><span class="p">)</span>          <span class="c1">// fp is a pointer to a function</span>
+                                            <span class="c1">// passing an int returning ...</span>
+                   <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)(</span><span class="kt">int</span><span class="p">)</span>          <span class="c1">// fp is a pointer to a function</span>
+                                            <span class="c1">// passing an int returning void</span>
+       <span class="n">signal</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)(</span><span class="kt">int</span><span class="p">))</span>         <span class="c1">// signal is a function passing </span>
+                                            <span class="c1">// an int and a pointer to</span>
+                                            <span class="c1">// a function passing an int</span>
+                                            <span class="c1">// returning void returning ...</span>
+      <span class="o">*</span><span class="n">signal</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)(</span><span class="kt">int</span><span class="p">))</span>         <span class="c1">// signal is a function passing </span>
+                                            <span class="c1">// an int and a pointer to</span>
+                                            <span class="c1">// a function passing an int</span>
+                                            <span class="c1">// returning void</span>
+                                            <span class="c1">// returning a pointer to ...</span>
+      <span class="o">*</span><span class="n">signal</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)(</span><span class="kt">int</span><span class="p">))</span>         <span class="c1">// signal is a function passing </span>
+                                            <span class="c1">// an int and a pointer to</span>
+                                            <span class="c1">// a function passing an int</span>
+                                            <span class="c1">// returning void</span>
+                                            <span class="c1">// returning a pointer to ...</span>
+      <span class="o">*</span><span class="n">signal</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)(</span><span class="kt">int</span><span class="p">))(</span><span class="kt">int</span><span class="p">);</span>   <span class="c1">// signal is a function passing </span>
+                                            <span class="c1">// an int and a pointer to</span>
+                                            <span class="c1">// a function passing an int</span>
+                                            <span class="c1">// returning void</span>
+                                            <span class="c1">// returning a pointer to a</span>
+                                            <span class="c1">// function passing an int</span>
+                                            <span class="c1">// returning ...</span>
+<span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">signal</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span> <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)(</span><span class="kt">int</span><span class="p">)))(</span><span class="kt">int</span><span class="p">);</span>  <span class="c1">// signal is a function passing </span>
+                                            <span class="c1">// an int and a pointer to</span>
+                                            <span class="c1">// a function passing an int</span>
+                                            <span class="c1">// returning void</span>
+                                            <span class="c1">// returning a pointer to a</span>
+                                            <span class="c1">// function passing an int</span>
+                                            <span class="c1">// returning void</span>
+</pre></div>
+
+
+<ul>
+<li>首先碰到左括號，知道它是個函式，並嘗試解讀括號內的東西<ul>
+<li>signal is a function passing an int and a …</li>
+</ul>
+</li>
+<li>碰到了另一個想理解的識別符（identifier）fp，於是像是遞迴函式先行解讀。先碰到右括號，先把括號內的東西解讀，遇到了 <code>*</code><ul>
+<li>fp is a pointer to …</li>
+</ul>
+</li>
+<li>接著是左括號<ul>
+<li>fp is a pointer to a function passing an int returning …</li>
+</ul>
+</li>
+<li>接著是 <code>void</code><ul>
+<li>fp is a pointer to a function passing an int returning nothin (void)</li>
+</ul>
+</li>
+<li>完成了 fp 的解讀，回到 signal 的解讀，將目前有的資訊結合<ul>
+<li>signal is a function passing an int and a pointer to a function passing an int returning nothing (void) returning …</li>
+</ul>
+</li>
+<li>接著是 <code>*</code><ul>
+<li>signal is a function passing an int and a pointer to a function passing an int returning nothing (void) returning a pointer to …</li>
+</ul>
+</li>
+<li>接著是左括號<ul>
+<li>signal is a function passing an int and a pointer to a function passing an int returning nothing (void) returning a pointer to a function passing an int returning …</li>
+</ul>
+</li>
+<li>最後是 <code>void</code><ul>
+<li>signal is a function passing an int and a pointer to a function passing an int returning nothing (void) returning a pointer to a function passing an int returning nothing (void)</li>
+</ul>
+</li>
+</ul>
+<h2>Compound Literals</h2>
+<blockquote>
+<p>源自 stack overflow 上<a href="https://stackoverflow.com/questions/14105645/is-it-possible-to-create-an-anonymous-initializer-in-c99/14105698#14105698">這篇</a>，覺得挺有趣的，自己也沒用過 compound literals，紀錄一下。</p>
+</blockquote>
+<p>大意是有人想用 C 讓 struct 做到像是 class 繼承那樣的效果，而他想到利用建構函式的參數來控制回傳的 struct 是哪一個（裡面有 a, b, c 三種）。這種選擇很簡單，使用 enum 就可以做到，問題是不同的 struct 裡面的資料結構不太一樣，他想要用一種 “anonymous variable” 來建構適當的 struct。</p>
+<p>回答中提到了 compound literals，它是個 <a href="https://en.wikipedia.org/wiki/C99#Design">C99 引進的特性</a>，我們能夠利用 initializer list 來製造一個無名物件（物件代表有專屬空間來存放資料），這個 compound literal 的結果為 lvalue [1]，也就是該物件的空間位址。由 casting + initializer list 組成，語法為：</p>
+<div class="highlight"><pre><span></span>(complete object type / array of unknown size){ initializer list }
+</pre></div>
+
+
+<p>也就是說我們可以做到像這樣的事情：</p>
+<div class="highlight"><pre><span></span><span class="n">drawline</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="k">struct</span> <span class="n">point</span><span class="p">){</span> <span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">1</span> <span class="p">},</span>
+         <span class="o">&amp;</span><span class="p">(</span><span class="k">struct</span> <span class="n">point</span><span class="p">){</span> <span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">4</span> <span class="p">});</span>
+</pre></div>
+
+
+<p>[1]: C11 <a href="http://port70.net/~nsz/c/c11/n1570.html#6.5.2.5">6.5.2.5</a> p4</p>
+<ul>
+<li>If the type name specifies an array of unknown size, the size is determined by the initializer list as specified in <a href="http://port70.net/~nsz/c/c11/n1570.html#6.7.9">6.7.9</a>, and the type of the compound literal is that of the completed array type. Otherwise (when the type name specifies an object type), the type of the compound literal is that specified by the type name. In either case, the result is an lvalue.</li>
+</ul>
+<h2>Flexible Array Members</h2>
+<p>同樣也是 <a href="https://en.wikipedia.org/wiki/C99#Design">C99 引進的特性</a>。在介紹以前，假設有個情境是需要紀錄會員名字的結構，最簡單的方法可能是：</p>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">User</span> <span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">id</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="mi">20</span><span class="p">];</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>但並非每個人都會剛好用滿 20 個字元，會造成浪費，於是第二種方法出現：</p>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">User</span> <span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">id</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>但是這樣會需要多一次 <code>malloc</code> 呼叫，且記憶體分佈可能會有破碎的情形。</p>
+<p>Flexible array members 這個新特性可以一次解決上述兩種方法的缺點，它具有以下限制：</p>
+<ul>
+<li>在 <code>struct</code> 內宣告一個 incomplete array type (e.g., <code>char name[]</code>，size of name is flexible)。</li>
+<li>這個成員（flexible array member）必須要放在最後。</li>
+<li>除了 flexible array member 外，<code>struct</code> 必須擁有至少一個成員。</li>
+</ul>
+<p>以上面的問題來舉例 flexible array member 常見用法：</p>
+<div class="highlight"><pre><span></span><span class="kt">char</span> <span class="n">input</span><span class="p">[</span><span class="mi">40</span><span class="p">];</span>
+<span class="kt">ssize_t</span> <span class="n">len</span><span class="p">;</span>
+<span class="k">struct</span> <span class="n">User</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+
+<span class="n">len</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">input</span><span class="p">,</span> <span class="mi">40</span><span class="p">);</span> <span class="c1">// assume that this read() succeeds</span>
+<span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">User</span> <span class="o">*</span><span class="p">)</span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">User</span><span class="p">)</span> <span class="o">+</span> <span class="n">len</span><span class="p">);</span>
+<span class="c1">// ...</span>
+<span class="n">free</span><span class="p">(</span><span class="n">p</span><span class="p">);</span>
+</pre></div>
+
+
+<p>在這情況下，上面的 <code>p</code> 相當於宣告為（在某些情況下，這個等效關係會不成立，詳見下方設計問題）：</p>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">User</span> <span class="p">{</span> <span class="kt">uint32_t</span> <span class="n">id</span><span class="p">;</span> <span class="kt">char</span> <span class="n">name</span><span class="p">[</span><span class="n">len</span><span class="p">];</span> <span class="p">}</span> <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+</pre></div>
+
+
+<p>如此一來，避免了分配額外空間外也防止了記憶體破碎的問題。</p>
+<h3>設計問題（以 C11 為準）</h3>
+<p>首先看一個有趣的問題，擁有 flexible array member 的 <code>struct</code> 的大小會是多少？</p>
+<div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">User</span> <span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">id</span><span class="p">;</span>
+    <span class="kt">char</span> <span class="n">name</span><span class="p">[];</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>根據 C11 規格書，<code>struct</code> 的大小計算是<strong>將 flexible array member 視為不存在</strong>，不過有個例外是：根據其他成員組成，編譯器可能會做 padding，而這個 padding 是*<strong>能夠</strong>*跟 flexible array member 的空間重疊的。也就是說 <code>sizeof(User) &gt;= offsetof(struct User, name)</code>，且上面提到的等效宣告也就可能會失效（兩種方式中 <code>name</code> 在 <code>struct</code> 中的 offset 可能會不同）。因此在存取 flexible array member 時注意不能夠直接使用 <code>sizeof</code>，需十分注意。</p>
+<p>延伸閱讀</p>
+<ul>
+<li>由於其他的限制，flexible array member 有些不合理的未定義行為，詳情可見相關<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2159.pdf">缺陷報告（Defeat Report）</a>，內容十分詳盡！</li>
+<li>在 C99 引進此特性以前，可以用小技巧（array of length 1）來做到類似的事情，某些編譯器可以支援 array of length 0，可參考 <a href="https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html">gcc 的介紹</a>。</li>
+</ul>
+<h2>Trivial Stuff</h2>
+<h3><code>func()</code> v.s. <code>func(void)</code> in C11</h3>
+<div class="highlight"><pre><span></span><span class="c1">// Declaration</span>
+
+<span class="kt">void</span> <span class="nf">func1</span><span class="p">();</span>      <span class="c1">// obsolescent</span>
+<span class="kt">void</span> <span class="nf">func2</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</pre></div>
+
+
+<ul>
+<li><code>func1</code> 沒有定義原型。（C11 specifies this as "function with no parameter specification". See <a href="http://port70.net/~nsz/c/c11/n1570.html#6.7.6.3p16">6.7.6.3 p16</a>）</li>
+<li><code>func2</code> 定義一個原型，這原型明確表示沒有任何 parameters。</li>
+</ul>
+<blockquote>
+<p><a href="https://en.wikipedia.org/wiki/Parameter_(computer_programming)#Parameters_and_arguments">parameter v.s. argument</a></p>
+<ul>
+<li>parameter (formal parameter)：在函式內用來代表參數的符號。</li>
+<li>argument (actual argument)：傳入函式中實際上的值。</li>
+</ul>
+</blockquote>
+<p>延伸閱讀</p>
+<ul>
+<li><a href="https://stackoverflow.com/questions/41803937/func-vs-funcvoid-in-c99">func() vs func(void) in c99</a><ul>
+<li>在 stackoverflow 上對這議題的討論。</li>
+</ul>
+</li>
+<li><a href="https://stackoverflow.com/questions/18820751/identifier-list-vs-parameter-type-list-in-c">Difference between identifier list and parameter type list</a><ul>
+<li>K&amp;R-style 的宣告方式。</li>
+</ul>
+</li>
+</ul>
+<h2>Reference</h2>
+<ul>
+<li><a href="https://bit.ly/2K1P282">程式設計師的自我修養</a></li>
+<li><a href="http://port70.net/~nsz/c/c11/n1570.html#Contents">C11 規格書</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Flexible_array_member#cite_note-3">Wiki of Flexible array number</a></li>
+<li><a href="https://stackoverflow.com/questions/29336835/is-the-offset-of-a-flexible-array-member-subject-to-change">Is the offset of a flexible array member subject to change</a></li>
+</ul>
+  </div>
+
+
+    <div class="comments">
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_shortname = 'naetw-github-io';
+        var disqus_identifier = "posts/2019/02/13/jserv-c-course-pointer-note/";
+        var disqus_title = "[Note] 你所不知道的 C 語言：指標篇";
+        var disqus_url = "https://naetw.github.io/posts/2019/02/13/jserv-c-course-pointer-note/";
+        (function() {
+          var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+          dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+          (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+      <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus</a>.</noscript>
+    </div>
+
+        </div>
+
+          <div class="col-md-3">
+  <div class="well">
+
+    <p><abbr title="2019-02-13T13:56:00+08:00"><i class="fa fa-calendar"></i> Wed 13 February 2019</abbr></p>
+
+      <p><address>
+        <i class="fa fa-user"></i> By
+          <a href="https://naetw.github.io/author/naetw.html" rel="author">Naetw</a>
+      </address></p>
+
+    <hr/>
+
+      <p>
+              <a href="https://naetw.github.io/category/note/" rel="tag"
+                  data-toggle="tooltip" class="label label-info"
+                  title="4 articles in this category">note</a>
+            <a href="/tag/c/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">C</a>
+            <a href="/tag/ni-suo-bu-zhi-dao-de-c-yu-yan/" data-toggle="tooltip"
+      class="label label-default"
+      title="2 articles with this tag">你所不知道的 C 語言</a>
+      </p>
+      <hr/>
+
+
+
+  </div>
+            
+          </div>
+
+      </div>
+
+    </div>
+
+    <!-- TODO: make footer sticky -->
+    <footer class="container-fluid">
+      <div class="container">
+        <div class="row">
+
+            <div class="col-md-2">
+                <h5>Social</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="https://github.com/Naetw">
+      <i class="fa fa-github"></i>
+    GitHub
+  </a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Links</h5>
+                <ul class="list-unstyled">
+                  <li>  <a href="http://getpelican.com/">
+      <img src="https://besticon-demo.herokuapp.com/icon?url=getpelican.com&size=16" width="16" height="16" class="icon" alt="getpelican.com icon"/>
+    Pelican
+  </a></li>
+                </ul>
+            </div>
+
+          <div class="col-md-2">
+            <h5>Browse content by</h5>
+            <ul class="list-unstyled">
+                <li><a href="https://naetw.github.io/categories/index.html"><i class="fa fa-tags"></i> Categories</a></li>
+                <li><a href="https://naetw.github.io/archives/index.html"><i class="fa fa-calendar"></i> Dates</a></li>
+                <li><a href="https://naetw.github.io/tags/index.html"><i class="fa fa-tag"></i> Tags</a></li>
+            </ul>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Copyright notice</h5>
+            <p>© Copyright 2016-2019 Naetw.</p>
+          </div>
+
+          <div class="col-md-2 text-muted">
+            <h5>Disclaimer</h5>
+              <p>All opinions expressed in this site are my own personal opinions and are not endorsed by, nor do they represent the opinions of my previous, current and future employers or any of its affiliates, partners or customers.</p>
+          </div>
+
+          <div class="col-md-2">
+              <h5>Feeds</h5>
+              <ul class="list-unstyled">
+                  <li><small><a href="https://naetw.github.io/feeds/all.atom.xml"><i class="fa fa-rss"></i> All posts (Atom)</a></small></li>
+                  <li><small><a href="https://naetw.github.io/feeds/note.atom.xml"><i class="fa fa-rss"></i> Category: note (Atom)</a></small></li>
+              </ul>
+          </div>
+
+        </div>
+      </div>
+
+      <h5 class="text-right"><a href="#"><i class="fa fa-arrow-up"></i> Back to top</a></h5>
+
+      <div class="container">
+        <div class="row col-md-12 text-muted text-center">
+          Site generated by <a href="https://getpelican.com"> Pelican</a>.<br/>
+          <a href="https://github.com/kdeldycke/plumage"> Plumage</a> theme by <a href="https://kevin.deldycke.com">Kevin Deldycke</a>.
+        </div>
+      </div>
+
+    </footer>
+
+    <script type="text/javascript">
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-122098105-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/magnific-popup.js/1.1.0/jquery.magnific-popup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fitvids/1.1.0/jquery.fitvids.min.js"></script>
+    <script src="https://naetw.github.io/theme/js/jquery.mglass.js"></script>
+    <script src="https://naetw.github.io/theme/js/application.js"></script>
+
+  </body>
+</html>
