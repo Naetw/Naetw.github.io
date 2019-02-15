@@ -65,7 +65,7 @@ Lvalues
 
 - Object in C - 一種資料表示法
     - 原文：region of data storage in the execution environment, the contents of which can represent values
-    - 在執行期間資料儲存的區域，可以表示數值的內容
+    - 在執行期間資料儲存的區域，其內容可以用來表示數值
 
 [1]: The name "lvalue" comes originally from the assignment expression E1 = E2, in which the left operand E1 is required to be a (modifiable) lvalue. It is perhaps better considered as representing an object "locator value". What is sometimes called "rvalue" is in this International Standard described as the "value of an expression". An obvious example of an lvalue is an identifier of an object. As a further example, if E is a unary expression that is a pointer to an object, *E is an lvalue that designates the object to which E points. (C99 6.3.2.1 footnote)
 
