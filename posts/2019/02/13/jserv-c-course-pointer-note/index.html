@@ -360,11 +360,19 @@ This article may be freely distributed as long as the author's name and this not
 </pre></div>
 
 
-<p>根據 C11 規格書，<code>struct</code> 的大小計算是<strong>將 flexible array member 視為不存在</strong>，不過有個例外是：根據其他成員組成，編譯器可能會做 padding，而這個 padding 是*<strong>能夠</strong>*跟 flexible array member 的空間重疊的。也就是說 <code>sizeof(User) &gt;= offsetof(struct User, name)</code>，且上面提到的等效宣告也就可能會失效（兩種方式中 <code>name</code> 在 <code>struct</code> 中的 offset 可能會不同）。因此在存取 flexible array member 時注意不能夠直接使用 <code>sizeof</code>，需十分注意。</p>
+<p>根據 C11 規格書 [1]，<code>struct</code> 的大小計算是<strong>將 flexible array member 視為不存在</strong>，不過有個例外是：根據其他成員組成，編譯器可能會做 padding，而這個 padding 是*<strong>能夠</strong>*跟 flexible array member 的空間重疊的。也就是說 <code>sizeof(User) &gt;= offsetof(struct User, name)</code>，且上面提到的等效宣告也就可能會失效（兩種方式中 <code>name</code> 在 <code>struct</code> 中的 offset 可能會不同）。因此在存取 flexible array member 時注意不能夠直接使用 <code>sizeof</code>，需十分注意。</p>
 <p>延伸閱讀</p>
 <ul>
-<li>由於其他的限制，flexible array member 有些不合理的未定義行為，詳情可見相關<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2159.pdf">缺陷報告（Defeat Report）</a>，內容十分詳盡！</li>
+<li>由於其他的限制（像是 structure  / union 型別的成員指派行為使得 padding 的空間會拿到非特定的資料 [2]），flexible array member 有些不合理的未定義行為，詳情可見相關<a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2159.pdf">缺陷報告（Defeat Report）</a>，內容十分詳盡！</li>
 <li>在 C99 引進此特性以前，可以用小技巧（array of length 1）來做到類似的事情，某些編譯器可以支援 array of length 0，可參考 <a href="https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html">gcc 的介紹</a>。</li>
+</ul>
+<p>[1]: C11 <a href="http://port70.net/~nsz/c/c11/n1570.html#6.7.2.1p18">6.7.2.1 p18</a></p>
+<ul>
+<li>In most situations, the flexible array member is ignored. In particular, the size of the structure is as if the flexible array member were omitted except that it may have more trailing padding than the omission would imply.</li>
+</ul>
+<p>[2]: C11 <a href="http://port70.net/~nsz/c/c11/n1570.html#6.2.6.1p6">6.2.6.1 p6</a></p>
+<ul>
+<li>When a value is stored in an object of structure or union type, including in a member object, the bytes of the object representation that correspond to any padding bytes take unspecified values.</li>
 </ul>
 <h2>Trivial Stuff</h2>
 <h3><code>func()</code> v.s. <code>func(void)</code> in C11</h3>

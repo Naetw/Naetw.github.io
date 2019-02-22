@@ -262,11 +262,19 @@ This article may be freely distributed as long as the author's name and this not
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;根據 C11 規格書，&lt;code&gt;struct&lt;/code&gt; 的大小計算是&lt;strong&gt;將 flexible array member 視為不存在&lt;/strong&gt;，不過有個例外是：根據其他成員組成，編譯器可能會做 padding，而這個 padding 是*&lt;strong&gt;能夠&lt;/strong&gt;*跟 flexible array member 的空間重疊的。也就是說 &lt;code&gt;sizeof(User) &amp;gt;= offsetof(struct User, name)&lt;/code&gt;，且上面提到的等效宣告也就可能會失效（兩種方式中 &lt;code&gt;name&lt;/code&gt; 在 &lt;code&gt;struct&lt;/code&gt; 中的 offset 可能會不同）。因此在存取 flexible array member 時注意不能夠直接使用 &lt;code&gt;sizeof&lt;/code&gt;，需十分注意。&lt;/p&gt;
+&lt;p&gt;根據 C11 規格書 [1]，&lt;code&gt;struct&lt;/code&gt; 的大小計算是&lt;strong&gt;將 flexible array member 視為不存在&lt;/strong&gt;，不過有個例外是：根據其他成員組成，編譯器可能會做 padding，而這個 padding 是*&lt;strong&gt;能夠&lt;/strong&gt;*跟 flexible array member 的空間重疊的。也就是說 &lt;code&gt;sizeof(User) &amp;gt;= offsetof(struct User, name)&lt;/code&gt;，且上面提到的等效宣告也就可能會失效（兩種方式中 &lt;code&gt;name&lt;/code&gt; 在 &lt;code&gt;struct&lt;/code&gt; 中的 offset 可能會不同）。因此在存取 flexible array member 時注意不能夠直接使用 &lt;code&gt;sizeof&lt;/code&gt;，需十分注意。&lt;/p&gt;
 &lt;p&gt;延伸閱讀&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;由於其他的限制，flexible array member 有些不合理的未定義行為，詳情可見相關&lt;a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2159.pdf"&gt;缺陷報告（Defeat Report）&lt;/a&gt;，內容十分詳盡！&lt;/li&gt;
+&lt;li&gt;由於其他的限制（像是 structure  / union 型別的成員指派行為使得 padding 的空間會拿到非特定的資料 [2]），flexible array member 有些不合理的未定義行為，詳情可見相關&lt;a href="http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2159.pdf"&gt;缺陷報告（Defeat Report）&lt;/a&gt;，內容十分詳盡！&lt;/li&gt;
 &lt;li&gt;在 C99 引進此特性以前，可以用小技巧（array of length 1）來做到類似的事情，某些編譯器可以支援 array of length 0，可參考 &lt;a href="https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html"&gt;gcc 的介紹&lt;/a&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;[1]: C11 &lt;a href="http://port70.net/~nsz/c/c11/n1570.html#6.7.2.1p18"&gt;6.7.2.1 p18&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;In most situations, the flexible array member is ignored. In particular, the size of the structure is as if the flexible array member were omitted except that it may have more trailing padding than the omission would imply.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;[2]: C11 &lt;a href="http://port70.net/~nsz/c/c11/n1570.html#6.2.6.1p6"&gt;6.2.6.1 p6&lt;/a&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;When a value is stored in an object of structure or union type, including in a member object, the bytes of the object representation that correspond to any padding bytes take unspecified values.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2&gt;Trivial Stuff&lt;/h2&gt;
 &lt;h3&gt;&lt;code&gt;func()&lt;/code&gt; v.s. &lt;code&gt;func(void)&lt;/code&gt; in C11&lt;/h3&gt;
