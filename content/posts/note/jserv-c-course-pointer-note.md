@@ -91,13 +91,13 @@ Disassembly of section .text:
 #include <stdio.h>
 
 void func(void) {
-	printf("aaa\n");
+    printf("aaa\n");
 }
 int main(void) {
-	void (*fptr)() = func;
-	(**********fptr)();     // equivalent to fptr();
-	(**********func)();     // equivalent to func();
-	return 0;
+    void (*fptr)() = func;
+    (**********fptr)();     // equivalent to fptr();
+    (**********func)();     // equivalent to func();
+    return 0;
 }
 ```
 
@@ -132,9 +132,9 @@ char *str[10];
 
 
 ```c
-	  str
-	  str[10];   // str is an array 10 of ...
-	 *str        // str is an array 10 of pointers to ...
+      str
+      str[10];   // str is an array 10 of ...
+     *str        // str is an array 10 of pointers to ...
 char *str[10];   // str is an array 10 of pointers to char
 ```
 
@@ -149,42 +149,42 @@ void (*signal(int, void (*fp)(int)))(int);
 
 
 ```c
-	   signal
-	   signal(int, ...                      // signal is a function passing 
-											// an int and a ...
-						(*fp)               // fp is a pointer to ...
-						(*fp)(int)          // fp is a pointer to a function
-											// passing an int returning ...
-				   void (*fp)(int)          // fp is a pointer to a function
-											// passing an int returning void
-	   signal(int, void (*fp)(int))         // signal is a function passing 
-											// an int and a pointer to
-											// a function passing an int
-											// returning void returning ...
-	  *signal(int, void (*fp)(int))         // signal is a function passing 
-											// an int and a pointer to
-											// a function passing an int
-											// returning void
-											// returning a pointer to ...
-	  *signal(int, void (*fp)(int))         // signal is a function passing 
-											// an int and a pointer to
-											// a function passing an int
-											// returning void
-											// returning a pointer to ...
-	  *signal(int, void (*fp)(int))(int);   // signal is a function passing 
-											// an int and a pointer to
-											// a function passing an int
-											// returning void
-											// returning a pointer to a
-											// function passing an int
-											// returning ...
+       signal
+       signal(int, ...                      // signal is a function passing 
+                                            // an int and a ...
+                        (*fp)               // fp is a pointer to ...
+                        (*fp)(int)          // fp is a pointer to a function
+                                            // passing an int returning ...
+                   void (*fp)(int)          // fp is a pointer to a function
+                                            // passing an int returning void
+       signal(int, void (*fp)(int))         // signal is a function passing 
+                                            // an int and a pointer to
+                                            // a function passing an int
+                                            // returning void returning ...
+      *signal(int, void (*fp)(int))         // signal is a function passing 
+                                            // an int and a pointer to
+                                            // a function passing an int
+                                            // returning void
+                                            // returning a pointer to ...
+      *signal(int, void (*fp)(int))         // signal is a function passing 
+                                            // an int and a pointer to
+                                            // a function passing an int
+                                            // returning void
+                                            // returning a pointer to ...
+      *signal(int, void (*fp)(int))(int);   // signal is a function passing 
+                                            // an int and a pointer to
+                                            // a function passing an int
+                                            // returning void
+                                            // returning a pointer to a
+                                            // function passing an int
+                                            // returning ...
 void (*signal(int, void (*fp)(int)))(int);  // signal is a function passing 
-											// an int and a pointer to
-											// a function passing an int
-											// returning void
-											// returning a pointer to a
-											// function passing an int
-											// returning void
+                                            // an int and a pointer to
+                                            // a function passing an int
+                                            // returning void
+                                            // returning a pointer to a
+                                            // function passing an int
+                                            // returning void
 ```
 
 
@@ -223,7 +223,7 @@ void (*signal(int, void (*fp)(int)))(int);  // signal is a function passing
 
 ```c
 drawline(&(struct point){ .x = 1, .y = 1 },
-		 &(struct point){ .x = 3, .y = 4 });
+         &(struct point){ .x = 3, .y = 4 });
 ```
 
 [1]: C11 [6.5.2.5](http://port70.net/~nsz/c/c11/n1570.html#6.5.2.5) p4
@@ -239,8 +239,8 @@ drawline(&(struct point){ .x = 1, .y = 1 },
 
 ```c
 struct User {
-	uint32_t id;
-	char name[20];
+    uint32_t id;
+    char name[20];
 };
 ```
 
@@ -249,8 +249,8 @@ struct User {
 
 ```c
 struct User {
-	uint32_t id;
-	char *name;
+    uint32_t id;
+    char *name;
 };
 ```
 
@@ -293,19 +293,26 @@ struct User { uint32_t id; char name[len]; } *p;
 
 ```c
 struct User {
-	uint32_t id;
-	char name[];
+    uint32_t id;
+    char name[];
 };
 ```
 
-根據 C11 規格書，`struct` 的大小計算是**將 flexible array member 視為不存在**，不過有個例外是：根據其他成員組成，編譯器可能會做 padding，而這個 padding 是\***能夠**\*跟 flexible array member 的空間重疊的。也就是說 `sizeof(User) >= offsetof(struct User, name)`，且上面提到的等效宣告也就可能會失效（兩種方式中 `name` 在 `struct` 中的 offset 可能會不同）。因此在存取 flexible array member 時注意不能夠直接使用 `sizeof`，需十分注意。
+根據 C11 規格書 [1]，`struct` 的大小計算是**將 flexible array member 視為不存在**，不過有個例外是：根據其他成員組成，編譯器可能會做 padding，而這個 padding 是\***能夠**\*跟 flexible array member 的空間重疊的。也就是說 `sizeof(User) >= offsetof(struct User, name)`，且上面提到的等效宣告也就可能會失效（兩種方式中 `name` 在 `struct` 中的 offset 可能會不同）。因此在存取 flexible array member 時注意不能夠直接使用 `sizeof`，需十分注意。
 
 
 延伸閱讀
 
-- 由於其他的限制，flexible array member 有些不合理的未定義行為，詳情可見相關[缺陷報告（Defeat Report）](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2159.pdf)，內容十分詳盡！
+- 由於其他的限制（像是 structure  / union 型別的成員指派行為使得 padding 的空間會拿到非特定的資料 [2]），flexible array member 有些不合理的未定義行為，詳情可見相關[缺陷報告（Defeat Report）](http://www.open-std.org/jtc1/sc22/wg14/www/docs/n2159.pdf)，內容十分詳盡！
 - 在 C99 引進此特性以前，可以用小技巧（array of length 1）來做到類似的事情，某些編譯器可以支援 array of length 0，可參考 [gcc 的介紹](https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html)。
 
+[1]: C11 [6.7.2.1 p18](http://port70.net/~nsz/c/c11/n1570.html#6.7.2.1p18)
+
+- In most situations, the flexible array member is ignored. In particular, the size of the structure is as if the flexible array member were omitted except that it may have more trailing padding than the omission would imply.
+
+[2]: C11 [6.2.6.1 p6](http://port70.net/~nsz/c/c11/n1570.html#6.2.6.1p6)
+
+- When a value is stored in an object of structure or union type, including in a member object, the bytes of the object representation that correspond to any padding bytes take unspecified values.
 
 Trivial Stuff
 ---
